@@ -14,9 +14,6 @@ let temp = document.getElementsByClassName("img_temp")[0];
 let confirm_button = document.getElementsByClassName("button-confirm")[0];
 confirm_button.disabled = false;
 
-let history_list_left = [];
-let history_list_right = [];
-let history_list_middle = [];
 let mouseOffset = {x:0, y:0};
 let isMouseDown = false;
 
@@ -63,12 +60,10 @@ function onMouseDown_clone(e, item) {
       multiChoice = true;
       tempTodo.className +=' over';
       let multi_list = document.getElementsByClassName('over');   
-      console.log(multi_list);
     }
   }
   else{
     if(isOver){
-      console.log("over");
   e.preventDefault();  
   isMouseDown = true;
   currentTodo = item;
@@ -145,7 +140,7 @@ function onMouseOver(e, item) {
     $(".img_temp").append(todo_clone);
     setListener_clone(todo_clone);
   }
-}
+} 
 
 var cumulativeOffset = function(element) {
   var top = 0, left = 0;
@@ -154,7 +149,6 @@ var cumulativeOffset = function(element) {
       left += element.offsetLeft || 0;
       element = element.offsetParent;
   } while(element);
-  console.log("good");
   return {
       top: top,
       left: left
@@ -171,7 +165,6 @@ function cloneImage(item){
     rect = new cumulativeOffset(item);
     todo_clone.style.left = rect.left - 14 + "px";
     todo_clone.style.top = rect.top - 15 - top + "px";
-    console.log(cumulativeOffset(item).top , cumulativeOffset(item).left);
     
 
     if(item.parentNode.className == "left"){
@@ -187,24 +180,41 @@ function cloneImage(item){
     return todo_clone;
 }
 
-function createAttributes(item){
-  var item_src = item.src.split("/").pop(-1);
-  console.log(item_src);
-  var temp = attr_list[String(item_src)];
-  console.log(temp);
-  for (var i =0; i< temp.length; i++){
-    var tag_node = document.createElement('div');
-    tag_node.setAttribute('class', 'attr-tag');
-    tag_node.innerText = temp[i];     
-    $('#attribute1').append(tag_node);
-  }
-}
-
 function onMouseOver_clone(e, item) {
   if(!isMouseDown){
     item.style.filter = "brightness(130%)";
-    createAttributes(item);
+
+    let jObject = new Object();  
+    jObject.image_id = item.src.split(/[/]+/).pop();
+  
+    jQuery.ajaxSettings.traditional = true;
+    
+    attrParam = JSON.stringify(jObject);
+
+    $.ajax({
+      url : "/getAttribute",
+      type: 'POST',
+      data: {"jsonData" : attrParam},
+      dataType:'json',
+      success: function(data) {
+        console.log(data['attribute']);
+                  
+            if(typeof $(".attr_on").attr("class") != "undefined"){
+              $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+            }
+        for(let i=0;i<data['attribute'].length;i++){
+   
+          $('#'.concat(data['attribute'][i])).attr('class', 'node'.concat(" attr_on"));
+          // $('#'.concat(data['attribute'][i])).css('fill', 'red');
+        }
+      },
+      error: function(x, e) {
+          alert("error");
+      }
+  });
+  
   }
+  
 }
 
 
@@ -215,11 +225,13 @@ function onMouseOut(e, item) {
 }
 
 function onMouseOut_clone(e, item) {
-  if(!isMouseDown){
-    item.style.filter = "brightness(100%)";
+  if(!isMouseDown){  
+  if(typeof $(".attr_on").attr("class") != "undefined"){
+    $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+  }
+  item.style.filter = "brightness(100%)";
     item.remove();
     if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
-    $('#attribute1').children().remove();
   }
 }
 
@@ -310,7 +322,10 @@ setInterval(() => {
 function snapTodo(todo, container,index) {
   area_list = ["left","center","right"];
   id_list = ["L","N","R"];
-  
+  if(typeof $(".attr_on").attr("class") != "undefined"){
+    $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+  }
+
 //log data를 저장하기 위한 jObject 선언
   let jObject = new Object();
   jObject.Time = js_yyyy_mm_dd_hh_mm_ss ();
@@ -367,10 +382,9 @@ function snapTodo(todo, container,index) {
         break;
       }
     }
-
+    
     // 만약 full count가 전체 row의 개수와 같다(모든 image row가 image로 가득 찼다면) 새로운 image row를 만들어 div 확장
     if(fullCount == temp_list.length){
-      console.log(row_count);
       new_row = document.createElement('div');
       for(let i=1;i<=row_count;i++){  
         new_slot = document.createElement('div');
@@ -406,7 +420,6 @@ function checkMousedown(e) {
   if(multiChoice && !ctrlPressed){
     let multi_list = document.getElementsByClassName('over');
     let multi_length = multi_list.length;
-    console.log(multi_length);
     for(let i=0;i<multi_length;i++){
       multi_list[0].className = multi_list[0].className.replace(" over",""); 
     }
@@ -419,7 +432,6 @@ function checkMousedown(e) {
 function checkKeyPressed(e) {
   if (e.keyCode == "17" || e.keyCode == "91") {
       ctrlPressed = true;
-      console.log(ctrlPressed);
   }
 }
 
@@ -437,7 +449,6 @@ function checkKeyUp(e) {
   let areas = document.getElementsByClassName("red-blue");
   
   for(let i=0;i<multi_list.length;i++){
-    console.log(multi_list.item(i));
       snapTodo(multi_list.item(i),areas[0],0);
     }
   }
@@ -448,7 +459,6 @@ function checkKeyUp(e) {
   let multi_list = document.querySelectorAll('.over');  
   let areas = document.getElementsByClassName("red-blue");
     for(let i=0;i<multi_list.length;i++){
-      console.log(multi_list.item(i));
       snapTodo(multi_list.item(i),areas[1],1);
     }
   }
@@ -459,7 +469,6 @@ function checkKeyUp(e) {
   let multi_list = document.querySelectorAll('.over');
   let areas = document.getElementsByClassName("red-blue");
     for(let i=0;i<multi_list.length;i++){
-      console.log(multi_list.item(i));
       snapTodo(multi_list.item(i),areas[2],2);
     }
   }
@@ -508,10 +517,11 @@ function getSyncScriptParams() {
       test : scriptName.getAttribute("test"),
       total_num : scriptName.getAttribute("total_num"),
       count_num : scriptName.getAttribute("count_num"),
+      positive_attr_list : scriptName.getAttribute("positive_attr_list"),
+      negative_attr_list : scriptName.getAttribute("negative_attr_list"),
       cluster : scriptName.getAttribute("cluster"),
       current_cluster : scriptName.getAttribute("current_cluster"),
-      label : scriptName.getAttribute("label"),
-      attr_list : scriptName.getAttribute("attr_list")
+      label : scriptName.getAttribute("label")
   };
 }
 
@@ -544,45 +554,11 @@ function logout_click(){
   window.location.href = "http://127.0.0.1:5000/logout";
 }  
 
-//
-function history_visualization(list, newcnt){
-  var divNode = document.createElement("div");
-  divNode.style.width = "136px";
-  divNode.style.height = "146.7px";
-  divNode.style.position = "relative";
-  // divNode.style.border = "solid";
-  divNode.style.float = "left";
-  divNode.style.margin = "0px";
-  for (var i=0; i<newcnt; i++){
-    let idx = list.length-newcnt+i;
-    var temp = divNode.cloneNode();
-    list[idx].classList.remove("todo-item");
-    list[idx].setAttribute("class","history-image");
-    list[idx].style.padding = '0px';
-    list[idx].style.margin = '0px';
-    if (list == history_list_left){
-      $('.history_image_left').append(temp);
-      $('.history_image_left').children()[idx].append(list[idx]);
-      console.log(list.length-newcnt+i);
-    }
-    else if (list == history_list_right){
-      $('.history_image_right').append(temp);
-      $('.history_image_right').children()[idx].append(list[idx]);
-      console.log(list.length-newcnt+i);
-    }
-    else {
-      $('.history_image_middle').append(temp);
-      $('.history_image_middle').children()[idx].append(list[idx]);
-      console.log(list.length-newcnt+i);
-    }
-  }
-}
-
 function classifyImages(){
-  let cnt_l = 0;
-  let cnt_n = 0;
-  let cnt_r = 0;
 
+  if(typeof $(".attr_on").attr("class") != "undefined"){
+    $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+  }
   // 배치된 image를 jarray형식으로 백엔드(/getData)로 전송
   let todo_list = document.getElementsByClassName("row")[0].getElementsByClassName("todo-item");
   let Jarray = new Array();
@@ -595,20 +571,14 @@ function classifyImages(){
     if(todo_list[i].parentNode.className=='left'){
       left_right = 1;
       var temp = todo_list[i].cloneNode();
-      history_list_left.push(temp);
-      cnt_l = cnt_l + 1;
     }
     else if(todo_list[i].parentNode.className=='right'){
       left_right = -1;
       var temp = todo_list[i].cloneNode();
-      history_list_right.push(temp);
-      cnt_r = cnt_r + 1;
     }
     else{
       left_right = 0;
       var temp = todo_list[i].cloneNode();
-      history_list_middle.push(temp);
-      cnt_n = cnt_n + 1;
     }
 
     let jObject = new Object();
@@ -619,10 +589,6 @@ function classifyImages(){
     jObject.time = timeStamp;
     Jarray.push(jObject);
   }
-
-  history_visualization(history_list_left, cnt_l);  
-  history_visualization(history_list_right, cnt_r);
-  history_visualization(history_list_middle, cnt_n);
 
   let outParam = JSON.stringify(Jarray);
   jQuery.ajaxSettings.traditional = true;
@@ -656,9 +622,10 @@ var params = new getSyncScriptParams();
 var images = JSON.parse(params.images);
 var current_cluster = JSON.parse(params.current_cluster);
 var label = JSON.parse(params.label);
-var attr_list = JSON.parse(params.attr_list);
 var total_num = JSON.parse(params.total_num);
 var count_num = JSON.parse(params.count_num);
+var positive_attr_list = JSON.parse(params.positive_attr_list);
+var negative_attr_list = JSON.parse(params.negative_attr_list);
 var keyword =params.keyword;
 var user_id = params.user_id;
 
@@ -767,6 +734,8 @@ function init(data){
     isNewset = data['isNewset'];
     score = data['score'];
     current_cluster = data['current_cluster'];
+    positive_attr_list = data['positive_attr_list'];
+    negative_attr_list = data['negative_attr_list'];
 
     var temp_dots = []
     for(x in dots)
@@ -776,7 +745,7 @@ function init(data){
       score[i].score = parseFloat(dots[temp_dots.indexOf(score[i].image_id)].score) + score[i].score;
       dots[temp_dots.indexOf(score[i].image_id)].score = score[i].score;
     }   
-
+    drawBar(positive_attr_list, negative_attr_list);
     markLabel(score);
     returnCurrent(beforeLabel);
     currentLabeling(current_cluster);
@@ -806,33 +775,28 @@ function init(data){
 /*--------------------------- tsne 그래프 ----------------------------------------*/
 
 var margin = { top: 0, right: 30, bottom: 0, left: 0},
-// width = 600 - margin.left - margin.right,
-// height = 640 - margin.top - margin.bottom;
-width = 350;
-height = 1017;
-var svg = d3.select("#tsne_div")
+tsne_width = 350;
+tsne_height = 1017;
+var tsne_svg = d3.select("#tsne_div")
           .append("svg")
-          // .attr("width", 570 + "px")
-          // .attr("height",  height + margin.top + margin.bottom + "px")
           .attr("width", 330 + "px")
           .attr("height",  1017 + "px")
           .style("border","none") 
           .style("background-color", "none")
           .call(d3.zoom()
                  .on("zoom", function () {
-          svg.attr("transform", d3.event.transform)
+          tsne_svg.attr("transform", d3.event.transform)
                  })
                  .scaleExtent([1,4])
-                 // .translateExtent([[0,0],[570,640]])
                  .translateExtent([[0,0],[350,1017]])
             )
           .append("g");
 
-var svg1 = d3.select('svg')
+var tsne_svg1 = d3.select('svg')
 
-svg1.append('rect')
+tsne_svg1.append('rect')
     .attr('x',1)
-    .attr('y',height-100)
+    .attr('y',tsne_height-100)
     .attr("width",130)
     .attr("height",100)
     .attr("stroke","#151515")
@@ -846,7 +810,7 @@ svg1.append('rect')
                 
 
 // legend 정의
-var legend = svg1.selectAll(".legend")
+var legend = tsne_svg1.selectAll(".legend")
                  .data([{text:'Positive', color:'rgb(65,122,255,1)', border:"transparent"},
                        {text:'Negative', color:'rgb(242,108,108,1)', border:"transparent"},
                       {text: 'Not labeled', color:'#AAAAAA', border:"transparent"},
@@ -856,7 +820,7 @@ var legend = svg1.selectAll(".legend")
                  .attr("transform", function(d, i) {return "translate(0," + i*20 + ")";});
 
 legend.append("circle").attr("cx",15)
-                       .attr("cy",height - 80)
+                       .attr("cy",tsne_height - 80)
                        .attr("r", 6)
                        .style("fill", function(d){return d.color})
                        .attr("stroke-width", 2)
@@ -864,37 +828,37 @@ legend.append("circle").attr("cx",15)
 
 
 legend.append("text").attr("x", 30)
-                     .attr("y", height - 80)
+                     .attr("y", tsne_height - 80)
                      .attr("dy", ".35em")
                      .attr("font-size",13)
                      .text(function(d) { return d.text});
 
-var rect = svg.append("rect")
-.attr("width", width)
-.attr("height", height)
+var rect = tsne_svg.append("rect")
+.attr("width", tsne_width)
+.attr("height", tsne_height)
 .style("fill", "none")
 .style("pointer-events", "all");
 
-var container = svg.append("g");
+var tsne_container = tsne_svg.append("g");
 
-container.append("g")
+tsne_container.append("g")
 .attr("class", "x axis")
 .selectAll("line")
-.data(d3.range(0, width, 10))
+.data(d3.range(0, tsne_width, 10))
 .enter().append("line")
 .attr("x1", function (d) { return d; })
 .attr("y1", 0)
 .attr("x2", function (d) { return d; })
-.attr("y2", height);
+.attr("y2", tsne_height);
 
-container.append("g")
+tsne_container.append("g")
 .attr("class", "y axis")
 .selectAll("line")
-.data(d3.range(0, height, 10))
+.data(d3.range(0, tsne_height, 10))
 .enter().append("line")
 .attr("x1", 0)
 .attr("y1", function (d) { return d; })
-.attr("x2", width)
+.attr("x2", tsne_width)
 .attr("y2", function (d) { return d; });
 
 xList = [];
@@ -911,9 +875,6 @@ for(let i=0;i<dots.length;i++){
 
 function scaleData(data,xList,yList){
   for(let i =0;i<data.length;i++){
-    // data[i].x = ( data[i].x - d3.min(xList) ) / (d3.max(xList) - d3.min(xList)) * 500 d3.quantile(xList,0.15);
-    // data[i].y = ( data[i].y - d3.min(yList) ) / (d3.max(yList) - d3.min(yList)) * 600 + d3.quantile(yList,0.15);
-
     data[i].x = ( data[i].x - d3.min(xList) ) / (d3.max(xList) - d3.min(xList)) * 300 + d3.quantile(xList,0.15);
     data[i].y = ( data[i].y - d3.min(yList) ) / (d3.max(yList) - d3.min(yList)) * 1000 + d3.quantile(yList,0.15);
   }
@@ -928,7 +889,7 @@ var color_scale = d3.scaleLinear()
 
 var tempStroke = null;
 
-dot = container.append("g")
+dot = tsne_container.append("g")
     .attr("class", "dot")
     .selectAll("circle")
     .data(dots)
@@ -966,9 +927,9 @@ dot = container.append("g")
 
     })
     .on("click", function(d) {
-      console.log("clicked");
       let jObject = new Object(); 
       jObject.image_id = d.image_id;
+      jObject.type = "tsne";
       $.ajax({
         url : "/getCurrent",
         type: 'POST',
@@ -987,7 +948,7 @@ dot = container.append("g")
 
 function currentLabeling(data){
   for(let i=0;i<data.length;i++){
-    var circle = container.select('[id="'.concat(data[i],'"]'));
+    var circle = tsne_container.select('[id="'.concat(data[i],'"]'));
    
     circle
         .transition()
@@ -1000,7 +961,7 @@ function currentLabeling(data){
 
 function returnCurrent(data){
   for(let i=0;i<data.length;i++){
-    var circle = container.select('[id="'.concat(data[i],'"]'));
+    var circle = tsne_container.select('[id="'.concat(data[i],'"]'));
     
     circle
         .transition()
@@ -1011,21 +972,236 @@ function returnCurrent(data){
 }
 
 function returnMark(){
-  var circle = container.selectAll('circle');
+  var circle = tsne_container.selectAll('circle');
   circle
         .style("fill","#AAAAAA");
+}
+
+
+function drawBar(positive_data, negative_data){
+    let axisscale = 0;
+  if(typeof positive_data[0] != "undefined" && typeof negative_data[0] != "undefined"){  
+    axisscale = Math.max(positive_data[0].score, negative_data[0].score);
+  }
+  else{
+    axisscale = 1;
+  }
+  console.log(axisscale);
+  xRange1.domain([0,axisscale]);
+  xRange2.domain([axisscale,0]);
+  bar_svg1.select(".x")
+          .transition()
+          .call(xAxis1);
+  bar_svg2.select(".x")
+          .transition()
+          .call(xAxis2);
+
+  update(bar_svg1,positive_data, axisscale, "blue");
+  update(bar_svg2,negative_data, axisscale, "red");
+
 }
 
 function markLabel(data){
   for(let i=0;i<data.length;i++){
     if(data[i].labeled){
-      var circle = container.select('[id="'.concat(data[i].image_id,'"]'));
+      var circle = tsne_container.select('[id="'.concat(data[i].image_id,'"]'));
       let color = color_scale(parseFloat(data[i]['score']));
       circle
         .style("fill",color);  
     }  
   }
 }
+/* Attriubute Statistic */
+
+let rect_width = 140;
+let rect_x = 20;
+let rect_margin = 13;
+let axisRange = 579 - rect_margin - rect_width - rect_x;
+
+let scale = 0;
+if(typeof positive_attr_list[0] != "undefined" && typeof negative_attr_list[0] != "undefined"){  
+  scale = Math.max(positive_attr_list[0].score, negative_attr_list[0].score);
+}
+else{
+  scale = 1;
+}
+
+var xRange1 = d3.scaleLinear()
+                .range([rect_x, 579 - rect_margin - rect_width])
+                .domain([0, scale]);
+var xAxis1 = d3.axisTop()
+              .scale(xRange1);
+
+var xRange2 = d3.scaleLinear()
+              .range([rect_width + rect_x, 579 - rect_margin])
+              .domain([scale, 0]);
+var xAxis2 = d3.axisTop()
+            .scale(xRange2);
+
+// Positive bar attribute
+
+var bar_svg1 = d3.select(".bar_positive").append("svg")
+.attr("width", 100 + "%")
+.attr("height", 100 + "%")
+.append("g");
+
+bar_svg1.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + 30 + ")")
+      .call(xAxis1);
+
+var bar_svg2 = d3.select(".bar_negative").append("svg")
+.attr("width", 100 + "%")
+.attr("height", 100 + "%")
+.append("g");
+
+bar_svg2.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + 30 + ")")
+      .call(xAxis2);
+            
+update(bar_svg1,positive_attr_list, scale, "blue");
+update(bar_svg2,negative_attr_list, scale, "red");
+tempStroke2 = null;
+function update(svg,data,scale, blueOrred){
+  let nodePos = null;
+  let scorePos = null;
+  if(blueOrred == "blue"){
+    nodePos = 579 - rect_width;
+    scorePos = rect_x;
+    scoreClass = "blue_score";
+  }
+  else{
+    nodePos = rect_x;
+    scorePos = 579 - 60;
+    scoreClass = "red_score";
+  }
+
+  var rect_nodes = svg.selectAll('rect.node').data(data);
+  rect_nodes.enter().append("rect").attr("class","node")
+                    .attr("id",function(d){ return d.attribute})
+                    .attr("x",nodePos)
+                    .attr("y",function(d, i){ return 60 + i*40})
+                    .attr("width", rect_width-5)
+                    .attr("height", 30)
+                    .on("mouseover", function(d){
+                      d3.select(this).style("cursor","pointer");
+                      
+                      tempStroke = d3.select(this).style("stroke");
+                      d3.select(this).style("stroke","green");
+                    })
+                    .on("mouseout", function(d) {      
+                      d3.select(this).style("stroke",tempStroke);
+                    })
+                    .on("click", function(d) {
+                      let jObject = new Object(); 
+                      jObject.attribute = d.attribute;
+                      jObject.type = "attribute";
+                      $.ajax({
+                        url : "/getCurrent",
+                        type: 'POST',
+                        data: jObject,
+                        dataType:'json',
+                        success: function(data) {
+                          init(data);
+                        },
+                        error: function(x, e) {
+                            alert("error");
+                        }
+                    });
+                    });
+
+  rect_nodes
+        .attr("id",function(d){ return d.attribute})
+        .attr("x",nodePos)
+        .attr("y",function(d, i){ return 60 + i*40})
+        .attr("width", rect_width-5)
+        .attr("height", 30);
+
+  var text_attribute = svg.selectAll("text.attribute").data(data);
+  text_attribute.enter().append("text").attr("class","attribute")
+                .attr("x", nodePos + 5)
+                .attr("y", function(d, i) { return 75 + i*40})
+                .attr("dy", ".35em")
+                .attr("font-size",13)
+                .text(function(d) { return d.attribute});
+
+  text_attribute
+                        .attr("x", nodePos + 5)
+                        .attr("y", function(d, i) { return 75 + i*40})
+                        .attr("dy", ".35em")
+                        .attr("font-size",13)
+                        .text(function(d) { return d.attribute});
+
+  var blue_rect_bar = svg.selectAll('rect.blue_bar').data(data);
+  var red_rect_bar = svg.selectAll('rect.red_bar').data(data);
+if(blueOrred == "blue"){
+
+  blue_rect_bar.enter().append("rect").attr("class","blue_bar")
+                  .attr("x", 20)
+                  .attr("y", function(d, i) { return 62 +  i*40})
+                  .transition()
+                  .attr("width", function(d){ return d.score / scale * axisRange})
+                  .attr("height", 26)
+                  .style("fill","blue")
+                  .style("opacity",0.7);
+
+  blue_rect_bar.transition()
+                  .attr("x", 20)
+                  .attr("y", function(d, i) { return 62 +  i*40})
+                  .attr("width", function(d){ return d.score / scale * axisRange})
+                  .attr("height", 26)
+                  .style("fill","blue")
+                  .style("opacity",0.7);
+
+  blue_rect_bar.exit().remove();
+  }
+  else{  
+  red_rect_bar.enter().append("rect").attr("class","red_bar")
+                  .attr("x", function(d){ return xRange2(d.score);})
+                  .attr("y", function(d, i) { return 62 +  i*40})
+                  .transition()
+                  .attr("width", function(d){return xRange2(0) - xRange2(d.score)})
+                  .attr("height", 26)
+                  .style("fill","red")
+                  .style("opacity",0.8);
+
+  red_rect_bar.transition()
+                  .attr("x", function(d){ return xRange2(d.score);})
+                  .attr("y", function(d, i) { return 62 +  i*40})
+                  .attr("width", function(d){return xRange2(0) - xRange2(d.score)})
+                  .attr("height", 26)
+                  .style("fill","red")
+                  .style("opacity",0.8);
+                  
+  red_rect_bar.exit().remove();
+  }
+  
+
+  var bar_score = svg.selectAll('text.'.concat(scoreClass)).data(data);
+
+  bar_score.enter().append("text").attr("class",scoreClass)
+  .attr("x", scorePos)
+  .attr("y", function(d, i ) { return 75 + i*40})
+  .attr("dy", ".35em")
+  .attr("font-size",13)
+  .style("fill","#FFFFFF")
+  .text(function(d) {return (d.score * 100).toFixed(1) + "%"});
+
+  bar_score
+      .attr("x", scorePos)
+      .attr("y", function(d, i ) { return 75 + i*40})
+      .attr("dy", ".35em")
+      .attr("font-size",13)
+      .style("fill","#FFFFFF")
+      .text(function(d) {return (d.score * 100).toFixed(1) + "%"});
+
+  bar_score.exit().remove();
+
+  rect_nodes.exit().remove();
+  text_attribute.exit().remove();
+
+      }      
 
 
 /* main */

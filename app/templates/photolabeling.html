@@ -103,61 +103,60 @@
           </div>
         
         </div>
-        <!-- Description -->
-      <div class=description id = "description0" style="text-align: left"><span class="count"></span>/<span class="total"></span></div>
-      <div class=description id = "description1">
-        Please review the images above in a way that the images are placed in the right category.
-      </div>
-      <div class=description id = "description2">
-          Images in the left box will be labeled as "<span class="keyword"></span>", in the middle box as "NEUTRAL", and in the right box as "not <span class="keyword"></span>".
-      </div>
-      <h4><b>
-      <div class=description id = "description3">
-      <p>You can choose multiple images by clicking with 'control' button pressed.</p>
-      You can also move the images using your keyboard. A: <span class="keyword"></span>, D: not <span class="keyword"></span>, W: Neutral, S: Confirm
-      <h4></b>
-      </div>
-        <!-- Buttons -->
-        <div style="width: 100%; text-align: center; margin: 10px">
-            <button class= "button-confirm" onclick="confirm_click();">
-                CONFIRM
-            </button>
-            <button class= "button-logout" onclick= "location.href='http://127.0.0.1:5000/logout';">
-            <!-- <button class= "button-logout" onclick= "location.href='http://130.211.240.166:5000/logout';"> -->
-              LOGOUT
-            </button>
-        </div>
-
 
         <!-- Your History -->
         <div class="row" style = "width: auto;">
-              
-            <div class=left1 style="width: 579px; height: 503px; margin:10px">
-              <div class =adjective style= "text-align: left">
-                <p>YOUR HISTORY</p>
+            <div class=left1 style="width: 579px; height: 300px; margin-left:22px;">
+              <div class =adjective style= "font-size: 30px; height: 10%;text-align: left">
+                <p>Positive Attribute History</p>
               </div>
-              <div class =history-red-blue id="history-blue" style= "text-align: left; background-color: rgba(65,122,255,0.05)">
-                <div class = "history_image_left" style = "height: 294px; overflow: auto"> </div>
-              </div>
+              <div class =bar_positive style= "width: 100%; height: 90%; text-align: left; background-color: rgba(65,122,255,0.05)">
             </div> 
-
+          </div> 
             <div class = left1 style="width: 310px; height: auto; margin:10px">
-              <div class =adjective style= "text-align: center"> </div>
-              <div class =history-red-blue id="history-neutral" style= "width: 310px; text-align: center">
-                <div class = "history_image_middle" style = "height: 294px; overflow: auto"> </div>
+              <div class =adjective style= "font-size: 30px;height: 10%; text-align: center"> </div>
+              <div class =bar_neutral style= "width: 100%; height: 90%; text-align: center">
               </div>
             </div>
 
-            <div class= left1 style="margin:10px">
-              <div class =adjective style= "text-align: right"> </div>
-              <div class =history-red-blue id="history-red" style= "text-align: right; background-color: rgba(242,108,108,0.05)">
-                  <div class = "history_image_right" style = "height: 294px; overflow: auto"> </div>
+            <div class= left1 style="width: 579px; height: 300px;">
+              <div class =adjective style= "font-size: 30px;height: 10%; text-align: right">
+                <p>Negative Attribute History</p>
+              </div>
+              <div class =bar_negative style= "width: 100%; height: 90%; text-align: right; background-color: rgba(242,108,108,0.05)">
               </div>
           </div>
       </div>
+      
+                <!-- Description -->
+                <div class=description id = "description0" style="text-align: left"><span class="count"></span>/<span class="total"></span></div>
+                <div class=description id = "description1">
+                  Please review the images above in a way that the images are placed in the right category.
+                </div>
+                <div class=description id = "description2">
+                    Images in the left box will be labeled as "<span class="keyword"></span>", in the middle box as "NEUTRAL", and in the right box as "not <span class="keyword"></span>".
+                </div>
+                <h4><b>
+                <div class=description id = "description3">
+                <p>You can choose multiple images by clicking with 'control' button pressed.</p>
+                You can also move the images using your keyboard. A: <span class="keyword"></span>, D: not <span class="keyword"></span>, W: Neutral, S: Confirm
+                <h4></b>
+                </div>
+                  <!-- Buttons -->
+                  <div style="width: 100%; text-align: center; margin: 10px">
+                      <button class= "button-confirm" onclick="confirm_click();">
+                          CONFIRM
+                      </button>
+                      <button class= "button-logout" onclick= "location.href='http://127.0.0.1:5000/logout';">
+                      <!-- <button class= "button-logout" onclick= "location.href='http://130.211.240.166:5000/logout';"> -->
+                        LOGOUT
+                      </button>
+                  </div>
+          
       </div>
         </div>
               
+
     <script type = "text/javascript" src = "{{url_for('static', filename='js/main.js') }}" keyword = "{{keyword}}" 
                                                                                           images = "{{images}}" 
                                                                                           user_id = "{{user_id}}" 
@@ -165,7 +164,8 @@
                                                                                           total_num = "{{total_num}}" 
                                                                                           count_num = "{{count_num}}"
                                                                                           label = "{{label}}"
-                                                                                          attr_list = "{{attr_list}}"
+                                                                                          positive_attr_list = "{{positive_attr_list}}"
+                                                                                          negative_attr_list = "{{negative_attr_list}}"
                                                                                           cluster = "{{cluster}}"
                                                                                           current_cluster = "{{current_cluster}}"
                                                                                           >

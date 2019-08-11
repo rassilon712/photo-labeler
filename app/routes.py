@@ -8,6 +8,7 @@ import pickle
 import time
 import random
 import copy
+from collections import Counter, OrderedDict
 
 from datetime import datetime
 import csv
@@ -95,6 +96,18 @@ def get_similar_images(image_name,feature_np,start,number):
     print("sort_ret", sort_ret)
     return sort_ret
 
+def get_attribute_images(attribute,attribute_list,start,number):
+    ret = []
+    
+    for i in range(len(attribute_list)):
+        if attribute in attribute_list[i]:
+            ret.append(i)
+            print(attribute_list[i], attribute)            
+        if len(ret) >= number:
+            break
+
+    return ret
+
 def appendImage(toList,possible_temp,Feature, query_indexes):
     for i in sorted(query_indexes):
         toList.append(possible_temp[i])    
@@ -159,6 +172,52 @@ def choosingImage(data,adjective):
     print(nega_name)
     return [posi_name, nega_name]
 
+def calculateAttribute(user_id, keyword_index):
+    positive_labeled = list(collection_labeled.find({'user_id':user_id,'adjective':CONST_ADJECTIVE[keyword_index], "label":1},{'_id':0,'label':0,'user_id':0,'adjective':0,'time':0}))
+    positive_labeled_list = [item['image_id'] for item in positive_labeled]
+    negative_labeled = list(collection_labeled.find({'user_id':user_id,'adjective':CONST_ADJECTIVE[keyword_index], "label":-1},{'_id':0,'label':0,'user_id':0,'adjective':0,'time':0}))
+    negative_labeled_list = [item['image_id'] for item in negative_labeled]
+
+    del positive_labeled, negative_labeled
+
+    ret_pos = []
+    ret_neg = []
+    if positive_labeled_list:
+        positive_attribute = Counter({})
+        for item in attr_list:
+            if item in positive_labeled_list:
+                positive_attribute = positive_attribute + Counter(attr_list[item])
+        # for item in positive_attribute:
+        #     positive_attribute[item] /= len(positive_labeled_list)
+    else:
+        positive_attribute = Counter({})
+
+    if negative_labeled_list:
+        negative_attribute = Counter({})
+        for item in attr_list:
+            if item in negative_labeled_list:
+                negative_attribute = negative_attribute + Counter(attr_list[item])
+        # for item in negative_attribute:
+        #     negative_attribute[item] /= len(negative_labeled_list)
+    else:
+        negative_attribute = Counter({})
+
+    total_attribute = positive_attribute + negative_attribute
+    
+    for item in dict(positive_attribute):
+        positive_attribute[item] /= total_attribute[item]
+        
+    for item in dict(negative_attribute):
+        negative_attribute[item] /= total_attribute[item]
+
+    sorted_positive_score = dict(sorted(positive_attribute.items(), key=lambda x: x[1], reverse = True)[0:5])
+    sorted_negative_score = dict(sorted(negative_attribute.items(), key=lambda x: x[1], reverse = True)[0:5])
+
+    ret_pos = [{"attribute":item, "score":sorted_positive_score[item]} for item in sorted_positive_score]
+    ret_neg = [{"attribute":item, "score":sorted_negative_score[item]} for item in sorted_negative_score] 
+    return [ret_pos, ret_neg]
+
+
 #-----------------------------------main----------------------------------------------------
 db = client.davian
 
@@ -185,13 +244,20 @@ collection_image.insert([{"image_id" : total_image_list[i], "image_index" : i} f
 
 feature_list = []
 key_list = []
+attr_list2 = []
 
 features = read_pck(CONST_PRETRAINED_FEATURE)[0]
+attr_list = read_pck('attr_list.pickle')[0]
+
+for each_key in sorted(attr_list):
+    attr_list2.append(attr_list[each_key])
 
 for each_key in sorted(features):
     feature_list.append(features[each_key])
     key_list.append(each_key)
 feature_np = np.array(feature_list)
+
+print("attr",attr_list2)
 
 cluster = AgglomerativeClustering(n_clusters=CONST_CLUSTER_NUMBER, affinity=CONST_CLUSTER_AFFINITY, linkage=CONST_CLUSTER_LINKAGE).fit_predict(feature_list)
 cluster = np.array(cluster)
@@ -260,8 +326,17 @@ def getLog():
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
         data_list['user_id'] = session.get('user_id')
-        collection_log.insert(data_list)
         return jsonify("good")
+        
+@app.route('/getAttribute', methods = ['GET','POST'])
+def getAttribute():
+    if request.method == "POST":
+        json_received = request.form
+        data = json_received.to_dict(flat=False)
+        data_list = json.loads(data['jsonData'][0])
+        print(data_list)
+        print(attr_list[data_list['image_id']])
+        return jsonify({"attribute":attr_list[data_list['image_id']]})
         
 @app.route('/getCurrent', methods = ['GET','POST'])
 def getCurrent():
@@ -275,9 +350,6 @@ def getCurrent():
 
         json_received = request.form
         data = json_received.to_dict(flat=False)
-        selectedImage = data['image_id'][0]
-        
-        collection_log.insert({"Time":time,"user_id": user_id, "What":"explore", "To":selectedImage})
 
         keyword_index = collection_current.find({"user_id": user_id})[0]['adjective']
 
@@ -285,42 +357,54 @@ def getCurrent():
         prelabeled_image_list = [item['image_id'] for item in collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]})]        
         possible_images = sorted(list(set(db_image_list) - set(prelabeled_image_list)))
 
-        possible_temp = copy.deepcopy(possible_images)
-        feature_temp = copy.deepcopy(feature_list)
+        if data['type'][0] == "tsne":
+            possible_temp = copy.deepcopy(possible_images)
+            feature_temp = copy.deepcopy(feature_list)
 
-        feature_removed = removeFeature(feature_temp, prelabeled_image_list)
+            feature_removed = removeFeature(feature_temp, prelabeled_image_list)
+ 
+            selectedImage = data['image_id'][0]
+            collection_log.insert({"Time":time,"user_id": user_id, "What":"explore", "To":selectedImage})
 
+            appendImage(blue_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_BLUE_NUMBER))
+            feature_removed = np.array(feature_temp)
+
+            appendImage(red_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_RED_NUMBER))
+            feature_removed = np.array(feature_temp)
+
+            appendImage(neutral_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_NEUTRAL_NUMBER))
         
-        appendImage(blue_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_BLUE_NUMBER))
-        feature_removed = np.array(feature_temp)
+        elif data['type'][0] == "attribute":
+            possible_temp = copy.deepcopy(possible_images)
+            attribute_temp = copy.deepcopy(attr_list2)
+           
+            attribute_removed = removeFeature(attribute_temp, prelabeled_image_list).tolist()
+ 
+            selectedAttribute = data['attribute'][0]
+            collection_log.insert({"Time":time,"user_id": user_id, "What":"explore", "To":selectedAttribute})
+            
+            appendImage(blue_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
 
-        appendImage(red_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_RED_NUMBER))
-        feature_removed = np.array(feature_temp)
+            appendImage(red_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
 
-        appendImage(neutral_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_NEUTRAL_NUMBER))
+            appendImage(neutral_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_NEUTRAL_NUMBER))
+        
+
 
         current_todo = blue_list + neutral_list + red_list
+        print(current_todo)
 
         labeled = [total_image_list.index(item) for item in current_todo]        
         cluster = extractCluster(labeled,"image_id")
-        print(cluster)
-        # cluster_index = extractCluster(labeled,"index")
-        
-        # for i in range(len(cluster_index)):
-        #     temp = cluster_data[cluster_index[i]]['image_id_list']
-            
-        #     for item2 in temp:
-        #         labeled_list = list(collection_labeled.find({"user_id":user_id, "adjective": adjective[keyword_index], "image_id" : item2},
-        #                                 {'_id':0,'user_id':0,'adjective':0,'time':0, 'label':0}))
-        #         if labeled_list:
-        #             outCluster[i]['labeled'] = True
-        
+        print(cluster)    
 
         for i in range(CONST_BATCH_NUMBER):
             if len(current_todo) > i:
                 collection_current.update({"user_id":user_id , "index":i}, {"user_id":user_id , "index":i, "adjective": keyword_index, "image_id" : current_todo[i]})
             else:
                 collection_current.update({"user_id":user_id , "index":i}, {"user_id":user_id , "index":i, "adjective": keyword_index, "image_id" : None})
+        
+        attribute_score = calculateAttribute(user_id, keyword_index)
 
     return jsonify({"blue":blue_list, "neutral":neutral_list, "red": red_list,
                      "keyword": CONST_ADJECTIVE[keyword_index],
@@ -328,7 +412,9 @@ def getCurrent():
                     "index": keyword_index,
                     "isNewset" : False,
                     "score" : [],
-                    "current_cluster" : cluster})
+                    "current_cluster" : cluster,
+                    "positive_attr_list" : attribute_score[0],
+                    "negative_attr_list" : attribute_score[1]})
 
 @app.route('/getData', methods = ['GET','POST'])
 def getData():
@@ -349,7 +435,8 @@ def getData():
             item['user_id'] = user_id
 
         collection_log.insert({"Time":time,"user_id": user_id, "What":"confirm"})
-        collection_labeled.insert(data_list)
+        if data_list:
+            collection_labeled.insert(data_list)
 
         keyword_index = collection_current.find({"user_id": user_id})[0]['adjective']
         print('main keyword' , keyword_index)
@@ -435,15 +522,18 @@ def getData():
             count = int(cluster_data[[item['image_id'] for item in cluster_data].index(outScore[i]["image_id"])]['count'])
             outScore[i]['score'] = outScore[i]['score'] / count
 
-        print(outScore)
+        attribute_score = calculateAttribute(user_id, keyword_index)
+
         return jsonify({"blue":blue_list, "neutral":neutral_list, "red": red_list,
                      "keyword": CONST_ADJECTIVE[keyword_index],
                     "image_count" : (int((total_num - len(possible_images))/CONST_BATCH_NUMBER)+1), 
                     "index": keyword_index,
                     "isNewset" : isNewset,
                     "score" : outScore,
-                    "current_cluster" : current_cluster
-                    })
+                    "current_cluster" : current_cluster,
+                    "positive_attr_list" : attribute_score[0],
+                    "negative_attr_list" : attribute_score[1]
+                                        })
         
 
 @app.route('/index', methods = ['GET', 'POST'])
@@ -474,11 +564,15 @@ def index():
 
         outCluster = copy.deepcopy(cluster_data)
 
-        
-        current_cluster_index = [total_image_list.index(dictOfImg[item]) for item in dictOfImg.keys()]
+        current_cluster_index = []
+        for item in dictOfImg.keys():
+            if dictOfImg[item] != None:
+                current_cluster_index.append(total_image_list.index(dictOfImg[item]))
+        # current_cluster_index = [total_image_list.index(dictOfImg[item]) for item in dictOfImg.keys()]
         current_cluster = extractCluster(current_cluster_index,"image_id")
 
         labeled_data = list(collection_labeled.find({'user_id':user_id,'adjective':CONST_ADJECTIVE[keyword_index]},{'_id':0,'user_id':0,'adjective':0,'time':0}))
+        
         labeled = [total_image_list.index(item['image_id']) for item in labeled_data]
         labeled_cluster = extractCluster(labeled,'index')
         print(labeled_cluster)
@@ -493,23 +587,27 @@ def index():
         print(outCluster[0])
 
         count = int(len(labeled_data)/CONST_BATCH_NUMBER)+1
-        attr_list = []
-        with open('attr_list.pickle', 'rb') as f:
-            attr_list = pickle.load(f)
+        
         # 여기서 첫 세트 사진 결정
         # 형용사 결정
         # user_id = str(user_id)
-        attr_list = json.dumps(attr_list)
         images = json.dumps(dictOfImg)
         label = json.dumps(labeled_data)
         current_cluster_json = json.dumps(current_cluster)
-        cluster_json = json.dumps(outCluster)  
+        cluster_json = json.dumps(outCluster)
+
+        attribute_score = calculateAttribute(user_id, keyword_index)
+
+        positive_score = json.dumps(attribute_score[0])
+        negative_score = json.dumps(attribute_score[1])
+
         return render_template('photolabeling.html', keyword = CONST_ADJECTIVE[keyword_index],
                                                      images = images, user_id = user_id, 
                                                      total_num = int(total_num/CONST_BATCH_NUMBER)+1, 
                                                      count_num = count,
                                                      label = label,
-                                                     attr_list = attr_list,
+                                                     positive_attr_list = positive_score,
+                                                     negative_attr_list = negative_score,
                                                      cluster = cluster_json,
                                                      current_cluster = current_cluster_json
                                                      )
