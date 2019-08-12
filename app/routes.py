@@ -40,6 +40,7 @@ CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
 CONST_FEATUREFILE_NAME = 'ffhq600_facenet_vggface2.pkl'
+CONST_RANDOM_SAMPLING = True
 
 #--------------------------------------------------------------------------------------------
 
@@ -105,7 +106,18 @@ def get_attribute_images(attribute,attribute_list,start,number):
             print(attribute_list[i], attribute)            
         if len(ret) >= number:
             break
+    return ret
 
+
+def get_not_attribute_images(attribute,attribute_list,start,number):
+    ret = []
+    
+    for i in range(len(attribute_list)):
+        if attribute not in attribute_list[i]:
+            ret.append(i)
+            print(attribute_list[i], attribute)            
+        if len(ret) >= number:
+            break
     return ret
 
 def appendImage(toList,possible_temp,Feature, query_indexes):
@@ -191,7 +203,7 @@ def calculateAttribute(user_id, keyword_index):
         #     positive_attribute[item] /= len(positive_labeled_list)
     else:
         positive_attribute = Counter({})
-
+    print(positive_attribute)
     if negative_labeled_list:
         negative_attribute = Counter({})
         for item in attr_list:
@@ -205,10 +217,16 @@ def calculateAttribute(user_id, keyword_index):
     total_attribute = positive_attribute + negative_attribute
     
     for item in dict(positive_attribute):
-        positive_attribute[item] /= total_attribute[item]
+        if total_attribute[item] < 10:
+            positive_attribute.pop(item, None)
+        else:
+            positive_attribute[item] /= total_attribute[item] 
         
     for item in dict(negative_attribute):
-        negative_attribute[item] /= total_attribute[item]
+        if total_attribute[item] < 10:
+            negative_attribute.pop(item, None)
+        else:
+            negative_attribute[item] /= total_attribute[item]
 
     sorted_positive_score = dict(sorted(positive_attribute.items(), key=lambda x: x[1], reverse = True)[0:5])
     sorted_negative_score = dict(sorted(negative_attribute.items(), key=lambda x: x[1], reverse = True)[0:5])
@@ -350,7 +368,7 @@ def getCurrent():
 
         json_received = request.form
         data = json_received.to_dict(flat=False)
-
+        print(data)
         keyword_index = collection_current.find({"user_id": user_id})[0]['adjective']
 
         db_image_list = [item['image_id'] for item in collection_image.find()]
@@ -381,22 +399,35 @@ def getCurrent():
             attribute_removed = removeFeature(attribute_temp, prelabeled_image_list).tolist()
  
             selectedAttribute = data['attribute'][0]
+
             collection_log.insert({"Time":time,"user_id": user_id, "What":"explore", "To":selectedAttribute})
             
-            appendImage(blue_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
+            if data['label'][0] == "positive":
 
-            appendImage(red_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
-
-            appendImage(neutral_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_NEUTRAL_NUMBER))
-        
+                appendImage(blue_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
+                appendImage(red_list, possible_temp, attribute_temp, get_not_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
+                
+                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
+                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
+                else:
+                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+            
+            else:
+                
+                appendImage(blue_list, possible_temp, attribute_temp, get_not_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
+                appendImage(red_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
+                
+                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
+                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
+                else:
+                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+            
 
 
         current_todo = blue_list + neutral_list + red_list
-        print(current_todo)
 
         labeled = [total_image_list.index(item) for item in current_todo]        
         cluster = extractCluster(labeled,"image_id")
-        print(cluster)    
 
         for i in range(CONST_BATCH_NUMBER):
             if len(current_todo) > i:
@@ -439,7 +470,6 @@ def getData():
             collection_labeled.insert(data_list)
 
         keyword_index = collection_current.find({"user_id": user_id})[0]['adjective']
-        print('main keyword' , keyword_index)
         imageStandard = choosingImage(data_list, CONST_ADJECTIVE[keyword_index])
 
         db_image_list = [item['image_id'] for item in collection_image.find()]
@@ -478,21 +508,41 @@ def getData():
 
             # 여기서 모델로 사진 결정
 
-            appendImage(blue_list, possible_temp, feature_temp, get_similar_images(imageStandard[0],feature_removed,1,CONST_BLUE_NUMBER))
-            feature_removed = np.array(feature_temp)
-            # print(len(possible_temp))
-            # print(feature_removed.shape)
-            appendImage(red_list, possible_temp, feature_temp, get_similar_images(imageStandard[1],feature_removed,1,CONST_RED_NUMBER))
-            feature_removed = np.array(feature_temp)
-            # print(feature_removed.shape)
-            
-            if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
-                appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
-            else:
-                appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+            if CONST_RANDOM_SAMPLING:
+                
+                if len(possible_temp) >= CONST_BLUE_NUMBER:
+                    appendImage(blue_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BLUE_NUMBER))
+                    feature_removed = np.array(feature_temp)
+                
+                else:
+                    appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+                    feature_removed = np.array(feature_temp)
+                if len(possible_temp) >= CONST_RED_NUMBER:
+                    appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_RED_NUMBER))
+                    feature_removed = np.array(feature_temp)
+                
+                else:
+                    appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+                    feature_removed = np.array(feature_temp)
+                
+                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
+                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
+                else:
+                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
 
-            # print(len(possible_temp))
-            # print(feature_removed.shape)
+
+
+            else:
+                appendImage(blue_list, possible_temp, feature_temp, get_similar_images(imageStandard[0],feature_removed,1,CONST_BLUE_NUMBER))
+                feature_removed = np.array(feature_temp)
+                appendImage(red_list, possible_temp, feature_temp, get_similar_images(imageStandard[1],feature_removed,1,CONST_RED_NUMBER))
+                feature_removed = np.array(feature_temp)
+                
+                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
+                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
+                else:
+                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+
         current_todo = blue_list + neutral_list + red_list
         for i in range(0,CONST_BATCH_NUMBER):
             if len(current_todo) > i:
@@ -575,7 +625,6 @@ def index():
         
         labeled = [total_image_list.index(item['image_id']) for item in labeled_data]
         labeled_cluster = extractCluster(labeled,'index')
-        print(labeled_cluster)
 
         for i in range(0,CONST_CLUSTER_NUMBER):
             sum_score = 0
@@ -584,7 +633,6 @@ def index():
                     sum_score += labeled_data[j]['label']
                     outCluster[i]['labeled'] = True
             outCluster[i]['score'] = str(sum_score/len(outCluster[i]['image_list']))
-        print(outCluster[0])
 
         count = int(len(labeled_data)/CONST_BATCH_NUMBER)+1
         

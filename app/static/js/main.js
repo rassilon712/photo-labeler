@@ -904,7 +904,8 @@ dot = tsne_container.append("g")
     .on("mouseover",function(d){
       tempStroke = d3.select(this).style("stroke");
       
-      d3.select(this).style("cursor","pointer");
+      //tsne 클릭 관련
+      // d3.select(this).style("cursor","pointer");
       d3.select(this).style("stroke","green");
       
       tsne_img
@@ -925,24 +926,25 @@ dot = tsne_container.append("g")
       tsne_img.select('img').remove();
       tsne_img.style("opacity", 0);  
 
-    })
-    .on("click", function(d) {
-      let jObject = new Object(); 
-      jObject.image_id = d.image_id;
-      jObject.type = "tsne";
-      $.ajax({
-        url : "/getCurrent",
-        type: 'POST',
-        data: jObject,
-        dataType:'json',
-        success: function(data) {
-          init(data);
-        },
-        error: function(x, e) {
-            alert("error");
-        }
     });
-    });
+    //tsne 클릭 관련
+    // .on("click", function(d) {
+    //   let jObject = new Object(); 
+    //   jObject.image_id = d.image_id;
+    //   jObject.type = "tsne";
+    //   $.ajax({
+    //     url : "/getCurrent",
+    //     type: 'POST',
+    //     data: jObject,
+    //     dataType:'json',
+    //     success: function(data) {
+    //       init(data);
+    //     },
+    //     error: function(x, e) {
+    //         alert("error");
+    //     }
+    // });
+    // })
 
 
 
@@ -1096,6 +1098,12 @@ function update(svg,data,scale, blueOrred){
                     .on("click", function(d) {
                       let jObject = new Object(); 
                       jObject.attribute = d.attribute;
+                      if( blueOrred == "blue"){
+                        jObject.label = "positive";
+                      }
+                      else{
+                        jObject.label = "negative";
+                      }
                       jObject.type = "attribute";
                       $.ajax({
                         url : "/getCurrent",
@@ -1176,7 +1184,7 @@ if(blueOrred == "blue"){
                   
   red_rect_bar.exit().remove();
   }
-  
+
 
   var bar_score = svg.selectAll('text.'.concat(scoreClass)).data(data);
 
