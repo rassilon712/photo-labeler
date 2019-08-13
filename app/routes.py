@@ -40,7 +40,7 @@ CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
 CONST_FEATUREFILE_NAME = 'ffhq600_facenet_vggface2.pkl'
-CONST_SAMPLING_MODE = "CLUSTER"
+CONST_SAMPLING_MODE = "RANDOM"
 
 #--------------------------------------------------------------------------------------------
 
@@ -540,12 +540,7 @@ def getData():
                 print(len(possible_temp))
                 feature_temp = copy.deepcopy(feature_list)
                             
-                appendImage(blue_list, possible_temp, feature_temp, [i for i in range(0,CONST_BLUE_NUMBER)])
-                feature_removed = np.array(feature_temp)
-                appendImage(neutral_list, possible_temp, feature_temp, [i for i in range(0,CONST_NEUTRAL_NUMBER)])
-                feature_removed = np.array(feature_temp)
-                appendImage(red_list, possible_temp, feature_temp, [i for i in range(0,CONST_RED_NUMBER)])
-                    
+                appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
 
         else:
             isNewset = False
@@ -564,28 +559,30 @@ def getData():
             # 여기서 모델로 사진 결정
 
             if CONST_SAMPLING_MODE == "RANDOM":
+                CONST_BLUE_NUMBER = 0
+                CONST_NEUTRAL_NUMBER = CONST_BATCH_NUMBER
+                CONST_RED_NUMBER = 0
+
+                # if len(possible_temp) >= CONST_BLUE_NUMBER:
+                #     appendImage(blue_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BLUE_NUMBER))
+                #     feature_removed = np.array(feature_temp)
                 
-                if len(possible_temp) >= CONST_BLUE_NUMBER:
-                    appendImage(blue_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BLUE_NUMBER))
-                    feature_removed = np.array(feature_temp)
+                # else:
+                #     appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+                #     feature_removed = np.array(feature_temp)
+                # if len(possible_temp) >= CONST_RED_NUMBER:
+                #     appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_RED_NUMBER))
+                #     feature_removed = np.array(feature_temp)
                 
-                else:
-                    appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
-                    feature_removed = np.array(feature_temp)
-                if len(possible_temp) >= CONST_RED_NUMBER:
-                    appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_RED_NUMBER))
-                    feature_removed = np.array(feature_temp)
-                
-                else:
-                    appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
-                    feature_removed = np.array(feature_temp)
-                
+                # else:
+                #     appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+                #     feature_removed = np.array(feature_temp)
                 if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
-                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
+                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
                 else:
                     appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
-
-
+                
+                batch_list = neutral_list
 
             elif CONST_SAMPLING_MODE == "CLUSTER":
                 
@@ -698,26 +695,30 @@ def index():
             print("keyword",keyword_index)
         else:
             print("new")
+            if CONST_SAMPLING_MODE == "RANDOM":
+                batch_list = [total_image_list[item] for item in random.sample(range(len(total_image_list)),CONST_BATCH_NUMBER)]
 
-            batch_list = []
-            isnotFull = True
-            total_cluster = copy.deepcopy(cluster_data)
-            lastCluster = total_cluster[random.randint(0,len(total_cluster)-1)]['image_id']
-            while(isnotFull):
-                for item in total_cluster:
-                    if item['image_id'] == lastCluster:
-                        if not item['image_id_list']:
-                            print("empty!")
-                            total_cluster.remove(item)
-                            lastCluster = updateLastcluster(lastCluster,total_cluster,"index")
+            elif CONST_SAMPLING_MODE == "CLUSTER":
+                batch_list = []
+                isnotFull = True
+                total_cluster = copy.deepcopy(cluster_data)
+                lastCluster = total_cluster[random.randint(0,len(total_cluster)-1)]['image_id']
+                while(isnotFull):
+                    for item in total_cluster:
+                        if item['image_id'] == lastCluster:
+                            if not item['image_id_list']:
+                                print("empty!")
+                                total_cluster.remove(item)
+                                lastCluster = updateLastcluster(lastCluster,total_cluster,"index")
 
-                        else:                        
-                            print(len(item['image_id_list']))
-                            batch_list.append(item['image_id_list'].pop())
-                            if len(batch_list) == CONST_BATCH_NUMBER:
-                                print("false")
-                                isnotFull = False        
-
+                            else:                        
+                                print(len(item['image_id_list']))
+                                batch_list.append(item['image_id_list'].pop())
+                                if len(batch_list) == CONST_BATCH_NUMBER:
+                                    print("false")
+                                    isnotFull = False        
+            
+            
             dictOfImg = { i : batch_list[i] for i in range(0,CONST_BATCH_NUMBER)}
             keyword_index = 0
             collection_current.insert([{'user_id' : user_id, "adjective" : 0, 'index' : i, 'image_id' : dictOfImg[i]} for i in range(0,CONST_BATCH_NUMBER)])

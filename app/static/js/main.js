@@ -4,7 +4,7 @@ const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 const IMAGE_PATH ="static/image/FFHQ_SAMPLE2/"
-
+const SAMPLING_MODE = "RANDOM";
 
 /* Tool 기능 관련 변수들 */
 
@@ -275,9 +275,16 @@ setInterval(() => {
         emptyCheck = emptyCheck + 1;
       }
     }
+    let threshold = 0;
+    if(i==0 || i==2){
+      threshold = 3;
+    }
+    else{
+      threshold = 4;
+    }
     if(
       emptyCheck == lastRows.length
-      && areas[i].getElementsByClassName('image_row').length > 3){
+      && areas[i].getElementsByClassName('image_row').length > threshold){
       areas[i].getElementsByClassName('image_row')[areas[i].getElementsByClassName('image_row').length-1].remove();
     }
     
@@ -756,7 +763,12 @@ function init(data){
     }
   }
   else{
-    selectList(total_queue,BLUE_IMAGE_NUMBER,NEUTRAL_IMAGE_NUMBER,RED_IMAGE_NUMBER);
+    if(SAMPLING_MODE == "RANDOM"){
+      selectList(total_queue,0,BLUE_IMAGE_NUMBER+RED_IMAGE_NUMBER+NEUTRAL_IMAGE_NUMBER,0);
+    }
+    else{
+      selectList(total_queue,BLUE_IMAGE_NUMBER,NEUTRAL_IMAGE_NUMBER,RED_IMAGE_NUMBER);  
+    }
   }
 
   $('.keyword').text(keyword);
