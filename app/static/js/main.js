@@ -1213,7 +1213,9 @@ if(blueOrred == "blue"){
 
 
 /* main */
-
+setTimeout(function() {
+    logout_click();
+}, 1200000);
 init();
 currentLabeling(current_cluster);
 markLabel(dots);
