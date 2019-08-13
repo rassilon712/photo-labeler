@@ -23,8 +23,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-client = pymongo.MongoClient('mongodb://localhost:27017/')
-# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+# client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -249,7 +249,8 @@ if "user" in collist:
     db.user.drop()
 
 collection_user = db.user
-collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False}, {'_id':'user101','pwd':'davian101','isDone':False}])
+
+collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False}, {'_id':'user101','pwd':'davian101','isDone':False},{'_id':'user1','pwd':'davian','isDone':False},{'_id':'user2','pwd':'davian','isDone':False},{'_id':'user3','pwd':'davian','isDone':False},{'_id':'user4','pwd':'davian','isDone':False},{'_id':'user5','pwd':'davian','isDone':False},{'_id':'user6','pwd':'davian','isDone':False},{'_id':'user7','pwd':'davian','isDone':False},{'_id':'user8','pwd':'davian','isDone':False}])
 collection_image = db.images
 collection_log = db.log
 collection_current = db.Current_toLabel
