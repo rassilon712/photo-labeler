@@ -32,6 +32,10 @@ db = client.davian
 CONST_BLUE_NUMBER = 6
 CONST_RED_NUMBER = 6
 CONST_NEUTRAL_NUMBER= 2
+CONST_RANDOM_BLUE_NUMBER = 0
+CONST_RANDOM_RED_NUMBER = 0
+CONST_RANDOM_NEUTRAL_NUMBER= 14
+
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
 CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2'
@@ -40,7 +44,7 @@ CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
 CONST_FEATUREFILE_NAME = 'ffhq600_facenet_vggface2.pkl'
-CONST_SAMPLING_MODE = "RANDOM"
+CONST_SAMPLING_MODE = "CLUSTER"
 
 #--------------------------------------------------------------------------------------------
 
@@ -478,9 +482,13 @@ def getData():
     user_id = session.get("user_id")
     #data 추가하는 것 try except 문으로 또 걸어주기 (id, pwd)까지
     if request.method == "POST":
+        blue_number = 0
+        red_number = 0
+        neutral_number = 0
         blue_list = []
         red_list = []
         neutral_list = []
+        batch_list = []
         isNewset = None
         time = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -505,10 +513,12 @@ def getData():
 
         if not possible_images:
             if CONST_SAMPLING_MODE == "CLUSTER":
+                blue_number = CONST_BLUE_NUMBER
+                red_number = CONST_RED_NUMBER
+                neutral_number = CONST_NEUTRAL_NUMBER
                 isNewset = True
                 keyword_index = keyword_index + 1
                    
-                batch_list = []
                 isnotFull = True
                 total_cluster = copy.deepcopy(cluster_data)
                 lastCluster = total_cluster[random.randint(0,len(total_cluster)-1)]['image_id']
@@ -526,10 +536,10 @@ def getData():
                                 if len(batch_list) == CONST_BATCH_NUMBER:
                                     print("false")
                                     isnotFull = False        
-                blue_list = batch_list[0:CONST_BLUE_NUMBER]
-                neutral_list = batch_list[CONST_BLUE_NUMBER:CONST_NEUTRAL_NUMBER]
-                blue_list = batch_list[CONST_BLUE_NUMBER+CONST_NEUTRAL_NUMBER:CONST_BATCH_NUMBER]
             else:
+                blue_number = CONST_RANDOM_BLUE_NUMBER
+                red_number = CONST_RANDOM_RED_NUMBER
+                neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
                 isNewset = True
                 keyword_index = keyword_index + 1
                 db_image_list = [item['image_id'] for item in collection_image.find()]
@@ -541,6 +551,7 @@ def getData():
                 feature_temp = copy.deepcopy(feature_list)
                             
                 appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
+                batch_list = neutral_list
 
         else:
             isNewset = False
@@ -559,9 +570,9 @@ def getData():
             # 여기서 모델로 사진 결정
 
             if CONST_SAMPLING_MODE == "RANDOM":
-                CONST_BLUE_NUMBER = 0
-                CONST_NEUTRAL_NUMBER = CONST_BATCH_NUMBER
-                CONST_RED_NUMBER = 0
+                # CONST_BLUE_NUMBER = 0
+                # CONST_NEUTRAL_NUMBER = CONST_BATCH_NUMBER
+                # CONST_RED_NUMBER = 0
 
                 # if len(possible_temp) >= CONST_BLUE_NUMBER:
                 #     appendImage(blue_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BLUE_NUMBER))
@@ -577,15 +588,22 @@ def getData():
                 # else:
                 #     appendImage(red_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
                 #     feature_removed = np.array(feature_temp)
-                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
-                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
+                if len(possible_temp) >= CONST_RANDOM_NEUTRAL_NUMBER:
+                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_RANDOM_NEUTRAL_NUMBER))
                 else:
                     appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
-                
+                blue_number = CONST_RANDOM_BLUE_NUMBER
+                red_number = CONST_RANDOM_RED_NUMBER
+                neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
+
                 batch_list = neutral_list
 
             elif CONST_SAMPLING_MODE == "CLUSTER":
                 
+                blue_number = CONST_BLUE_NUMBER
+                red_number = CONST_RED_NUMBER
+                neutral_number = CONST_NEUTRAL_NUMBER
+
                 total_cluster = copy.deepcopy(cluster_data)
                 print(len(total_cluster))
                 for item in prelabeled_image_list:
@@ -660,8 +678,8 @@ def getData():
             outScore[i]['score'] = outScore[i]['score'] / count
 
         attribute_score = calculateAttribute(user_id, keyword_index)
-
-        return jsonify({"blue":current_todo[0:CONST_BLUE_NUMBER], "neutral":current_todo[CONST_BLUE_NUMBER:CONST_BLUE_NUMBER+CONST_NEUTRAL_NUMBER], "red": current_todo[CONST_BLUE_NUMBER+CONST_NEUTRAL_NUMBER:CONST_BATCH_NUMBER],
+        print("blue", current_todo[0:CONST_BLUE_NUMBER])
+        return jsonify({"blue":current_todo[0:blue_number], "neutral":current_todo[blue_number:blue_number+neutral_number], "red": current_todo[blue_number+neutral_number:blue_number+neutral_number+red_number],
                      "keyword": CONST_ADJECTIVE[keyword_index],
                     "image_count" : (int((total_num - len(possible_images))/CONST_BATCH_NUMBER)+1), 
                     "index": keyword_index,

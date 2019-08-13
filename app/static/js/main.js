@@ -4,7 +4,7 @@ const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 const IMAGE_PATH ="static/image/FFHQ_SAMPLE2/"
-const SAMPLING_MODE = "RANDOM";
+const SAMPLING_MODE = "CLUSTER";
 
 /* Tool 기능 관련 변수들 */
 
