@@ -23,8 +23,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-client = pymongo.MongoClient('mongodb://localhost:27017/')
-# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+# client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -498,20 +498,12 @@ def getData():
         json_received = request.form
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
-        print("data_list")
-        print(data_list[0])
         before_time = collection_user.find({'_id':user_id})[0]['time']
         add_time = int(data_list[0]['time'])
-        print('before_time', before_time)
-        print('type before', type(before_time))
-        print('add_time', add_time)
-        print('type add', type(add_time))
         final_time = before_time + add_time
         print('final_time', final_time)
         if final_time > 10000:
-            return render_template('logout.html')
-
-        collection_user.update({'_id':user_id}, {'$set':{'isDone' : True}})
+            collection_user.update({'_id':user_id}, {'$set':{'isDone' : True}})
         collection_user.update({'_id':user_id}, {'$set':{'time' : final_time}})
 
         for item in data_list:
@@ -705,9 +697,10 @@ def getData():
                     "score" : outScore,
                     "current_cluster" : current_cluster,
                     "positive_attr_list" : attribute_score[0],
-                    "negative_attr_list" : attribute_score[1]
-                                        })
-        
+                    "negative_attr_list" : attribute_score[1],
+                    "time" : final_time})
+
+    
 
 @app.route('/index', methods = ['GET', 'POST'])
 def index():
