@@ -275,16 +275,9 @@ setInterval(() => {
         emptyCheck = emptyCheck + 1;
       }
     }
-    let threshold = 0;
-    if(i==0 || i==2){
-      threshold = 3;
-    }
-    else{
-      threshold = 4;
-    }
     if(
       emptyCheck == lastRows.length
-      && areas[i].getElementsByClassName('image_row').length > threshold){
+      && areas[i].getElementsByClassName('image_row').length > 3){
       areas[i].getElementsByClassName('image_row')[areas[i].getElementsByClassName('image_row').length-1].remove();
     }
     
@@ -718,7 +711,49 @@ function displayImages(queue){
         img_node.setAttribute("id",1);
       }
       var ID = '#'.concat(side,String(i));
-      $(ID).append(img_node);
+      if($(ID).length != 0){
+        $(ID).append(img_node);
+      }
+      else{
+        container = null;
+        classname = null;
+        if(side == "L"){
+          container = document.getElementsByClassName('blue')[0];
+          classname = "left";
+        }
+        else if(side == "R"){
+          container = document.getElementsByClassName('red')[0];
+          classname = "right";
+        }
+        else{
+          container = document.getElementsByClassName('neutral')[0];
+          classname = "center";
+        }
+        console.log(container);
+        let row_count = container.getElementsByClassName('image_row')[0].childElementCount;
+        console.log(row_count);
+        new_row = document.createElement('div');
+          for(let j=0;j<row_count;j++){  
+            new_slot = document.createElement('div');
+            new_slot.className = classname;
+            console.log(ID.replace(side,""));
+            new_slot.id = side + (parseInt(ID.replace("#".concat(side),""))+j);
+            
+            if(j==0){
+              new_slot.append(img_node);
+              img_node.className = img_node.className.replace(" over","");  
+              setListener(img_node);
+              img_node.style.left = 0 + "px";
+              img_node.style.top = 0 + "px";
+              // currentTodo = null;
+              // fullCount = 0; 
+            }
+            new_row.append(new_slot); 
+          }
+          new_row.className = "image_row";
+          container.append(new_row);
+        }
+      }
       img_node.onload = function(){
         onLoadcount++;
       if(onLoadcount == totalDisplay){
@@ -727,7 +762,7 @@ function displayImages(queue){
       }};
     }
   }
-}
+
 
 function init(data){
   clearAll();
@@ -775,8 +810,9 @@ function init(data){
   $('.count').text(count_num);
   $('.total').text(total_num);
 
-
   totalDisplay = blue_queue.length + neutral_queue.length + red_queue.length;
+
+
 
   displayImages(blue_queue);
   displayImages(red_queue);
