@@ -544,8 +544,8 @@ $(document).ready(function() {
 //confirm 누름
 function confirm_click(){
   timeEnd = Date.now();
-    confirm_button.disabled = true;
-    classifyImages();
+  confirm_button.disabled = true;
+  classifyImages();
 }
 
 //logout 누름
@@ -563,8 +563,9 @@ function classifyImages(){
   let todo_list = document.getElementsByClassName("row")[0].getElementsByClassName("todo-item");
   let Jarray = new Array();
   let timeStamp= timeEnd - timeStart;
+  console.log(timeStamp);
   timeStamp = JSON.stringify(timeStamp);
-  
+
 
   for(let i=0;i<todo_list.length;i++){
     let left_right = 0;
@@ -1262,9 +1263,6 @@ if(blueOrred == "blue"){
 
 
 /* main */
-setTimeout(function() {
-    logout_click();
-}, 1200000);
 init();
 currentLabeling(current_cluster);
 markLabel(dots);

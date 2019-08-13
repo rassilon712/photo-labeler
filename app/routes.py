@@ -278,7 +278,9 @@ if "user" in collist:
 
 collection_user = db.user
 
-collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False}, {'_id':'user101','pwd':'davian101','isDone':False},{'_id':'user1','pwd':'davian','isDone':False},{'_id':'user2','pwd':'davian','isDone':False},{'_id':'user3','pwd':'davian','isDone':False},{'_id':'user4','pwd':'davian','isDone':False},{'_id':'user5','pwd':'davian','isDone':False},{'_id':'user6','pwd':'davian','isDone':False},{'_id':'user7','pwd':'davian','isDone':False},{'_id':'user8','pwd':'davian','isDone':False}])
+collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False, 'time': 0}, {'_id':'user101','pwd':'davian101','isDone':False, 'time': 0},{'_id':'user1','pwd':'davian','isDone':False, 'time': 0},
+    {'_id':'user2','pwd':'davian','isDone':False, 'time': 0},{'_id':'user3','pwd':'davian','isDone':False, 'time': 0},{'_id':'user4','pwd':'davian','isDone':False, 'time': 0},{'_id':'user5','pwd':'davian','isDone':False, 'time': 0},
+    {'_id':'user6','pwd':'davian','isDone':False, 'time': 0},{'_id':'user7','pwd':'davian','isDone':False, 'time': 0},{'_id':'user8','pwd':'davian','isDone':False, 'time': 0}])
 collection_image = db.images
 collection_log = db.log
 collection_current = db.Current_toLabel
@@ -304,7 +306,7 @@ for each_key in sorted(features):
     key_list.append(each_key)
 feature_np = np.array(feature_list)
 
-print("attr",attr_list2)
+# print("attr",attr_list2)
 
 cluster = AgglomerativeClustering(n_clusters=CONST_CLUSTER_NUMBER, affinity=CONST_CLUSTER_AFFINITY, linkage=CONST_CLUSTER_LINKAGE).fit_predict(feature_list)
 cluster = np.array(cluster)
@@ -480,6 +482,8 @@ def getCurrent():
 @app.route('/getData', methods = ['GET','POST'])
 def getData():
     user_id = session.get("user_id")
+    check_time = collection_user.find({'_id':user_id})[0]['time']
+    print('check_time', check_time)
     #data 추가하는 것 try except 문으로 또 걸어주기 (id, pwd)까지
     if request.method == "POST":
         blue_number = 0
@@ -491,11 +495,25 @@ def getData():
         batch_list = []
         isNewset = None
         time = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-
         json_received = request.form
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
-        # print(data_list[0])
+        print("data_list")
+        print(data_list[0])
+        before_time = collection_user.find({'_id':user_id})[0]['time']
+        add_time = int(data_list[0]['time'])
+        print('before_time', before_time)
+        print('type before', type(before_time))
+        print('add_time', add_time)
+        print('type add', type(add_time))
+        final_time = before_time + add_time
+        print('final_time', final_time)
+        if final_time > 10000:
+            return render_template('logout.html')
+
+        collection_user.update({'_id':user_id}, {'$set':{'isDone' : True}})
+        collection_user.update({'_id':user_id}, {'$set':{'time' : final_time}})
+
         for item in data_list:
             item['user_id'] = user_id
 
