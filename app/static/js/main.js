@@ -583,6 +583,7 @@ function classifyImages(){
 
     let jObject = new Object();
     jObject.user_id = user_id;
+    jObject.cluster = current_cluster[i];
     jObject.image_id = todo_list[i].src.split(/[/]+/).pop();
     jObject.adjective = keyword;
     jObject.label = left_right;

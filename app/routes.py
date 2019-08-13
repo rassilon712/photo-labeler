@@ -23,8 +23,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# client = pymongo.MongoClient('mongodb://localhost:27017/')
-client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+client = pymongo.MongoClient('mongodb://localhost:27017/')
+# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -40,7 +40,7 @@ CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
 CONST_FEATUREFILE_NAME = 'ffhq600_facenet_vggface2.pkl'
-CONST_RANDOM_SAMPLING = True
+CONST_SAMPLING_MODE = "CLUSTER"
 
 #--------------------------------------------------------------------------------------------
 
@@ -85,16 +85,22 @@ def centeroidnp(arr):
     return sum_x/length, sum_y/length
 
 
-def get_similar_images(image_name,feature_np,start,number):
-    query_feature = np.expand_dims(np.array(features[image_name]), 0)
+def get_similar_images(input_data,feature_np,start,number, option):
+    query_feature = None
 
+    if option == "name":
+        query_feature = np.expand_dims(np.array(features[input_data]), 0)
+    elif option == "feature":
+        query_feature = input_data
+    print(query_feature.shape)
+    print(feature_np.shape)
     ret = cosine_similarity(query_feature, feature_np)
     ret = np.squeeze(ret, 0)
     
-    print("ret shape",ret.shape, ret.shape[0])
+    # print("ret shape",ret.shape, ret.shape[0])
 
     sort_ret = np.argsort(ret)[::-1][start:number+start]
-    print("sort_ret", sort_ret)
+    # print("sort_ret", sort_ret)
     return sort_ret
 
 def get_attribute_images(attribute,attribute_list,start,number):
@@ -183,6 +189,24 @@ def choosingImage(data,adjective):
         nega_name = nega_list[random.randint(0,len(nega_list)-1)]['image_id']
     print(nega_name)
     return [posi_name, nega_name]
+
+def updateLastcluster(data_list,total_cluster, option):
+    sum_feature = None
+    if option == "ajax":
+        for i in range(len(data_list)):
+            if i == 0:
+                sum_feature = np.array(features[data_list[0]['image_id']])
+            else:
+                sum_feature += np.array(features[data_list[i]["image_id"]])
+        sum_feature = np.expand_dims(sum_feature / CONST_BATCH_NUMBER,0)
+    if option == "index":
+        sum_feature = np.expand_dims(np.array(features[data_list]),0)
+
+    cluster_feature = []
+    for item in total_cluster:
+        cluster_feature.append(features[item['image_id']])
+    cluster_feature_np = np.array(cluster_feature)
+    return total_cluster[get_similar_images(sum_feature,cluster_feature_np,0,1,"feature")[0]]['image_id']
 
 def calculateAttribute(user_id, keyword_index):
     positive_labeled = list(collection_labeled.find({'user_id':user_id,'adjective':CONST_ADJECTIVE[keyword_index], "label":1},{'_id':0,'label':0,'user_id':0,'adjective':0,'time':0}))
@@ -385,13 +409,13 @@ def getCurrent():
             selectedImage = data['image_id'][0]
             collection_log.insert({"Time":time,"user_id": user_id, "What":"explore", "To":selectedImage})
 
-            appendImage(blue_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_BLUE_NUMBER))
+            appendImage(blue_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_BLUE_NUMBER, "name"))
             feature_removed = np.array(feature_temp)
 
-            appendImage(red_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_RED_NUMBER))
+            appendImage(red_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_RED_NUMBER, "name"))
             feature_removed = np.array(feature_temp)
 
-            appendImage(neutral_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_NEUTRAL_NUMBER))
+            appendImage(neutral_list, possible_temp, feature_temp, get_similar_images(selectedImage,feature_removed,0,CONST_NEUTRAL_NUMBER, "name"))
         
         elif data['type'][0] == "attribute":
             possible_temp = copy.deepcopy(possible_images)
@@ -429,6 +453,7 @@ def getCurrent():
 
         labeled = [total_image_list.index(item) for item in current_todo]        
         cluster = extractCluster(labeled,"image_id")
+        print(cluster)
 
         for i in range(CONST_BATCH_NUMBER):
             if len(current_todo) > i:
@@ -471,6 +496,7 @@ def getData():
             collection_labeled.insert(data_list)
 
         keyword_index = collection_current.find({"user_id": user_id})[0]['adjective']
+        
         imageStandard = choosingImage(data_list, CONST_ADJECTIVE[keyword_index])
 
         db_image_list = [item['image_id'] for item in collection_image.find()]
@@ -478,21 +504,49 @@ def getData():
         possible_images = sorted(list(set(db_image_list) - set(prelabeled_image_list)))
 
         if not possible_images:
-            isNewset = True
-            keyword_index = keyword_index + 1
-            db_image_list = [item['image_id'] for item in collection_image.find()]
-            prelabeled_image_list = [item['image_id'] for item in collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]})]        
-            possible_images = sorted(list(set(db_image_list) - set(prelabeled_image_list)))
-            
-            possible_temp = copy.deepcopy(possible_images)
-            print(len(possible_temp))
-            feature_temp = copy.deepcopy(feature_list)
-                        
-            appendImage(blue_list, possible_temp, feature_temp, [i for i in range(0,CONST_BLUE_NUMBER)])
-            feature_removed = np.array(feature_temp)
-            appendImage(neutral_list, possible_temp, feature_temp, [i for i in range(0,CONST_NEUTRAL_NUMBER)])
-            feature_removed = np.array(feature_temp)
-            appendImage(red_list, possible_temp, feature_temp, [i for i in range(0,CONST_RED_NUMBER)])
+            if CONST_SAMPLING_MODE == "CLUSTER":
+                isNewset = True
+                keyword_index = keyword_index + 1
+                   
+                batch_list = []
+                isnotFull = True
+                total_cluster = copy.deepcopy(cluster_data)
+                lastCluster = total_cluster[random.randint(0,len(total_cluster)-1)]['image_id']
+                while(isnotFull):
+                    for item in total_cluster:
+                        if item['image_id'] == lastCluster:
+                            if not item['image_id_list']:
+                                print("empty!")
+                                total_cluster.remove(item)
+                                lastCluster = updateLastcluster(lastCluster,total_cluster,"index")
+
+                            else:                        
+                                print(len(item['image_id_list']))
+                                batch_list.append(item['image_id_list'].pop())
+                                if len(batch_list) == CONST_BATCH_NUMBER:
+                                    print("false")
+                                    isnotFull = False        
+                blue_list = batch_list[0:CONST_BLUE_NUMBER]
+                neutral_list = batch_list[CONST_BLUE_NUMBER:CONST_NEUTRAL_NUMBER]
+                blue_list = batch_list[CONST_BLUE_NUMBER+CONST_NEUTRAL_NUMBER:CONST_BATCH_NUMBER]
+            else:
+                isNewset = True
+                keyword_index = keyword_index + 1
+                db_image_list = [item['image_id'] for item in collection_image.find()]
+                prelabeled_image_list = [item['image_id'] for item in collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]})]        
+                possible_images = sorted(list(set(db_image_list) - set(prelabeled_image_list)))
+                
+                possible_temp = copy.deepcopy(possible_images)
+                print(len(possible_temp))
+                feature_temp = copy.deepcopy(feature_list)
+                            
+                appendImage(blue_list, possible_temp, feature_temp, [i for i in range(0,CONST_BLUE_NUMBER)])
+                feature_removed = np.array(feature_temp)
+                appendImage(neutral_list, possible_temp, feature_temp, [i for i in range(0,CONST_NEUTRAL_NUMBER)])
+                feature_removed = np.array(feature_temp)
+                appendImage(red_list, possible_temp, feature_temp, [i for i in range(0,CONST_RED_NUMBER)])
+                    
+
         else:
             isNewset = False
             print("possible_images", len(possible_images))
@@ -509,7 +563,7 @@ def getData():
 
             # 여기서 모델로 사진 결정
 
-            if CONST_RANDOM_SAMPLING:
+            if CONST_SAMPLING_MODE == "RANDOM":
                 
                 if len(possible_temp) >= CONST_BLUE_NUMBER:
                     appendImage(blue_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BLUE_NUMBER))
@@ -533,18 +587,59 @@ def getData():
 
 
 
-            else:
-                appendImage(blue_list, possible_temp, feature_temp, get_similar_images(imageStandard[0],feature_removed,1,CONST_BLUE_NUMBER))
-                feature_removed = np.array(feature_temp)
-                appendImage(red_list, possible_temp, feature_temp, get_similar_images(imageStandard[1],feature_removed,1,CONST_RED_NUMBER))
-                feature_removed = np.array(feature_temp)
+            elif CONST_SAMPLING_MODE == "CLUSTER":
                 
-                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
-                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
-                else:
-                    appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+                total_cluster = copy.deepcopy(cluster_data)
+                print(len(total_cluster))
+                for item in prelabeled_image_list:
+                    for item2 in total_cluster:
+                        if item in item2['image_id_list']:
+                            item2['image_id_list'].pop(item2['image_id_list'].index(item))
+                            if not item2['image_id_list']:
+                                total_cluster.remove(item2)
+                print(len(total_cluster))
+                lastCluster = list(collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]}).sort("_id",pymongo.DESCENDING).limit(1))[0]['cluster']
+                print("current_cluster", lastCluster)
+                
+                count = 0
+                for item in total_cluster:
+                    if item['image_id'] != lastCluster:
+                        count += 1
+                if count == len(total_cluster):
+                    lastCluster = updateLastcluster(data_list,total_cluster,"ajax")
+                
+                
+                batch_list = []
+                isnotFull = True
+                while(isnotFull):
+                    for item in total_cluster:
+                        if item['image_id'] == lastCluster:
+                            if not item['image_id_list']:
+                                print("empty!")
+                                total_cluster.remove(item)
+                                if not total_cluster:
+                                    isnotFull = False
+                                    break
+                                lastCluster = updateLastcluster(data_list,total_cluster,"ajax")
 
-        current_todo = blue_list + neutral_list + red_list
+                            else:                        
+                                print(len(item['image_id_list']))
+                                batch_list.append(item['image_id_list'].pop())
+                                if len(batch_list) == CONST_BATCH_NUMBER:
+                                    print("false")
+                                    isnotFull = False
+
+
+
+        current_todo = batch_list
+
+        labeled = [total_image_list.index(item['image_id']) for item in data_list]
+        current_cluster_index = [total_image_list.index(item) for item in current_todo]
+        current_cluster = extractCluster(current_cluster_index, "image_id")
+        print(current_cluster)
+        labeled_cluster = extractCluster(labeled,'image_id')
+        label = np.array([d['label'] for d in data_list])
+
         for i in range(0,CONST_BATCH_NUMBER):
             if len(current_todo) > i:
                 collection_current.update({"user_id":user_id , "index":i}, {"user_id":user_id , "index":i, "adjective": keyword_index, "image_id" : current_todo[i]})
@@ -553,12 +648,6 @@ def getData():
         if keyword_index >= 3:
             collection_user.update({'_id':user_id}, {'$set':{'isDone' : True}})
 
-        labeled = [total_image_list.index(item['image_id']) for item in data_list]
-        current_cluster_index = [total_image_list.index(item) for item in current_todo]
-        current_cluster = extractCluster(current_cluster_index, "image_id")
-        print(current_cluster)
-        labeled_cluster = extractCluster(labeled,'image_id')
-        label = np.array([d['label'] for d in data_list])
 
         outScore = []
         temp = []
@@ -575,7 +664,7 @@ def getData():
 
         attribute_score = calculateAttribute(user_id, keyword_index)
 
-        return jsonify({"blue":blue_list, "neutral":neutral_list, "red": red_list,
+        return jsonify({"blue":current_todo[0:CONST_BLUE_NUMBER], "neutral":current_todo[CONST_BLUE_NUMBER:CONST_BLUE_NUMBER+CONST_NEUTRAL_NUMBER], "red": current_todo[CONST_BLUE_NUMBER+CONST_NEUTRAL_NUMBER:CONST_BATCH_NUMBER],
                      "keyword": CONST_ADJECTIVE[keyword_index],
                     "image_count" : (int((total_num - len(possible_images))/CONST_BATCH_NUMBER)+1), 
                     "index": keyword_index,
@@ -609,9 +698,29 @@ def index():
             print("keyword",keyword_index)
         else:
             print("new")
-            dictOfImg = { i : db_image_list[i] for i in range(0,CONST_BATCH_NUMBER)}
+
+            batch_list = []
+            isnotFull = True
+            total_cluster = copy.deepcopy(cluster_data)
+            lastCluster = total_cluster[random.randint(0,len(total_cluster)-1)]['image_id']
+            while(isnotFull):
+                for item in total_cluster:
+                    if item['image_id'] == lastCluster:
+                        if not item['image_id_list']:
+                            print("empty!")
+                            total_cluster.remove(item)
+                            lastCluster = updateLastcluster(lastCluster,total_cluster,"index")
+
+                        else:                        
+                            print(len(item['image_id_list']))
+                            batch_list.append(item['image_id_list'].pop())
+                            if len(batch_list) == CONST_BATCH_NUMBER:
+                                print("false")
+                                isnotFull = False        
+
+            dictOfImg = { i : batch_list[i] for i in range(0,CONST_BATCH_NUMBER)}
             keyword_index = 0
-            collection_current.insert([{'user_id' : user_id, "adjective" : 0, 'index' : i, 'image_id' : db_image_list[i]} for i in range(0,CONST_BATCH_NUMBER)])
+            collection_current.insert([{'user_id' : user_id, "adjective" : 0, 'index' : i, 'image_id' : dictOfImg[i]} for i in range(0,CONST_BATCH_NUMBER)])
 
         outCluster = copy.deepcopy(cluster_data)
 
