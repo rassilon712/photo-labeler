@@ -38,8 +38,7 @@ CONST_RANDOM_NEUTRAL_NUMBER= 14
 
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
-# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2'
-CONST_IMAGE_PATH = "gs://labeling_images/FFHQ_SAMPLE2/"
+CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2'
 CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
 CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
 CONST_CLUSTER_NUMBER = 200
@@ -287,7 +286,7 @@ collection_log = db.log
 collection_current = db.Current_toLabel
 collection_before = db.Before_toLabel
 
-total_image_list = sorted(os.listdir(CONST_IMAGE_PATH))[0:1000]
+total_image_list = sorted(os.listdir(os.path.join(APP_ROOT,CONST_IMAGE_PATH)))
 total_num = len(total_image_list)
 
 collection_image.insert([{"image_id" : total_image_list[i], "image_index" : i} for i in range(len(total_image_list))])
