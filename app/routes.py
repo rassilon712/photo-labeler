@@ -23,8 +23,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-client = pymongo.MongoClient('mongodb://localhost:27017/')
-# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+# client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -39,11 +39,11 @@ CONST_RANDOM_NEUTRAL_NUMBER= 14
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
 CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2'
-CONST_PRETRAINED_FEATURE = "ffhq600_facenet_vggface2.pkl"
+CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
+CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
 CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
-CONST_FEATUREFILE_NAME = 'ffhq600_facenet_vggface2.pkl'
 CONST_SAMPLING_MODE = "RANDOM"
 
 #--------------------------------------------------------------------------------------------
@@ -295,8 +295,28 @@ feature_list = []
 key_list = []
 attr_list2 = []
 
-features = read_pck(CONST_PRETRAINED_FEATURE)[0]
-attr_list = read_pck('attr_list.pickle')[0]
+features1 = read_pck(CONST_PRETRAINED_FEATURE1)[0]
+features2 = read_pck(CONST_PRETRAINED_FEATURE2)[0]
+
+features1.update(features2)
+
+features = {}
+for key in sorted(features1.keys()):
+    if not key in features:    # Depending on the goal, this line may not be neccessary
+        features[key] = features1[key]
+        if len(features.keys()) == 1000:
+            break
+print(features.keys())
+
+attr_list = {}
+attr_list_temp = read_pck('attr_list.pickle')[0]
+for key in sorted(attr_list_temp.keys()):
+    if not key in attr_list:    # Depending on the goal, this line may not be neccessary
+        attr_list[key] = attr_list_temp[key]
+        if len(attr_list.keys()) == 1000:
+            break
+print(attr_list.keys())
+
 
 for each_key in sorted(attr_list):
     attr_list2.append(attr_list[each_key])

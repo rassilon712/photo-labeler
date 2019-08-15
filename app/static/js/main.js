@@ -550,8 +550,8 @@ function confirm_click(){
 
 //logout 누름
 function logout_click(){
-  // window.location = "http://130.211.240.166:5000//logout";
-  window.location.href = "http://127.0.0.1:5000/logout";
+  window.location = "http://130.211.240.166:5000//logout";
+  // window.location.href = "http://127.0.0.1:5000/logout";
 }  
 
 function classifyImages(){
@@ -603,16 +603,16 @@ function classifyImages(){
       //NUMBER_OF_ADJECTIVE만큼 실험을 안 했다면 화면 초기화(init)
       //NUMBER_OF_ADJECTIVE만큼 실험을 했다면 로그아웃 (이 때, user db의 isDone 필드가 True로 바뀌며 재접속 불가능)
       if(data['time'] > 900000){
-        window.location = "http://127.0.0.1:5000/logIn";
-        // window.location = "http://130.211.240.166:5000/logIn";
+        // window.location = "http://127.0.0.1:5000/logIn";
+        window.location = "http://130.211.240.166:5000/logIn";
 
       }
       if(data['index'] < NUMBER_OF_ADJECTIVE){
         init(data);
       }
       else{
-        window.location = "http://127.0.0.1:5000/logIn";
-        // window.location = "http://130.211.240.166:5000/logIn";
+        // window.location = "http://127.0.0.1:5000/logIn";
+        window.location = "http://130.211.240.166:5000/logIn";
       }
     },
     error: function(x, e) {
