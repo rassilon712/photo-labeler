@@ -550,8 +550,8 @@ function confirm_click(){
 
 //logout 누름
 function logout_click(){
-  window.location = "http://130.211.240.166:5000//logout";
-  // window.location.href = "http://127.0.0.1:5000/logout";
+  // window.location = "http://130.211.240.166:5000//logout";
+  window.location.href = "http://127.0.0.1:5000/logout";
 }  
 
 function classifyImages(){
@@ -603,16 +603,16 @@ function classifyImages(){
       //NUMBER_OF_ADJECTIVE만큼 실험을 안 했다면 화면 초기화(init)
       //NUMBER_OF_ADJECTIVE만큼 실험을 했다면 로그아웃 (이 때, user db의 isDone 필드가 True로 바뀌며 재접속 불가능)
       if(data['time'] > 900000){
-        // window.location = "http://127.0.0.1:5000/logIn";
-        window.location = "http://130.211.240.166:5000/logIn";
+        window.location = "http://127.0.0.1:5000/logIn";
+        // window.location = "http://130.211.240.166:5000/logIn";
 
       }
       if(data['index'] < NUMBER_OF_ADJECTIVE){
         init(data);
       }
       else{
-        // window.location = "http://127.0.0.1:5000/logIn";
-        window.location = "http://130.211.240.166:5000/logIn";
+        window.location = "http://127.0.0.1:5000/logIn";
+        // window.location = "http://130.211.240.166:5000/logIn";
       }
     },
     error: function(x, e) {
@@ -1121,6 +1121,10 @@ update(bar_svg1,positive_attr_list, scale, "blue");
 update(bar_svg2,negative_attr_list, scale, "red");
 tempStroke2 = null;
 function update(svg,data,scale, blueOrred){
+  sorted_data = data.sort(function(x, y){
+    return d3.descending(x.score, y.score);
+ });
+
   let nodePos = null;
   let scorePos = null;
   if(blueOrred == "blue"){
@@ -1134,7 +1138,7 @@ function update(svg,data,scale, blueOrred){
     scoreClass = "red_score";
   }
 
-  var rect_nodes = svg.selectAll('rect.node').data(data);
+  var rect_nodes = svg.selectAll('rect.node').data(sorted_data);
   rect_nodes.enter().append("rect").attr("class","node")
                     .attr("id",function(d){ return d.attribute})
                     .attr("x",nodePos)
@@ -1181,7 +1185,7 @@ function update(svg,data,scale, blueOrred){
         .attr("width", rect_width-5)
         .attr("height", 30);
 
-  var text_attribute = svg.selectAll("text.attribute").data(data);
+  var text_attribute = svg.selectAll("text.attribute").data(sorted_data);
   text_attribute.enter().append("text").attr("class","attribute")
                 .attr("x", nodePos + 5)
                 .attr("y", function(d, i) { return 75 + i*40})
@@ -1196,8 +1200,8 @@ function update(svg,data,scale, blueOrred){
                         .attr("font-size",13)
                         .text(function(d) { return d.attribute});
 
-  var blue_rect_bar = svg.selectAll('rect.blue_bar').data(data);
-  var red_rect_bar = svg.selectAll('rect.red_bar').data(data);
+  var blue_rect_bar = svg.selectAll('rect.blue_bar').data(sorted_data);
+  var red_rect_bar = svg.selectAll('rect.red_bar').data(sorted_data);
 if(blueOrred == "blue"){
 
   blue_rect_bar.enter().append("rect").attr("class","blue_bar")
@@ -1241,7 +1245,7 @@ if(blueOrred == "blue"){
   }
 
 
-  var bar_score = svg.selectAll('text.'.concat(scoreClass)).data(data);
+  var bar_score = svg.selectAll('text.'.concat(scoreClass)).data(sorted_data);
 
   bar_score.enter().append("text").attr("class",scoreClass)
   .attr("x", scorePos)
