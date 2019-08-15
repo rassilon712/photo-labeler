@@ -44,7 +44,7 @@ CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
 CONST_FEATUREFILE_NAME = 'ffhq600_facenet_vggface2.pkl'
-CONST_SAMPLING_MODE = "CLUSTER"
+CONST_SAMPLING_MODE = "RANDOM"
 
 #--------------------------------------------------------------------------------------------
 
@@ -361,6 +361,7 @@ def logIn():
             return render_template('loginFail.html')
 
 @app.route('/logout', methods = ['GET','POST'])
+
 def logout():
     if request.method == 'GET':
         user_id = session.get("user_id")
@@ -502,7 +503,7 @@ def getData():
         add_time = int(data_list[0]['time'])
         final_time = before_time + add_time
         print('final_time', final_time)
-        if final_time > 10000:
+        if final_time > 900000:
             collection_user.update({'_id':user_id}, {'$set':{'isDone' : True}})
         collection_user.update({'_id':user_id}, {'$set':{'time' : final_time}})
 

@@ -4,7 +4,7 @@ const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 const IMAGE_PATH ="static/image/FFHQ_SAMPLE2/"
-const SAMPLING_MODE = "CLUSTER";
+const SAMPLING_MODE = "RANDOM";
 
 /* Tool 기능 관련 변수들 */
 
@@ -602,7 +602,7 @@ function classifyImages(){
     success: function(data) {
       //NUMBER_OF_ADJECTIVE만큼 실험을 안 했다면 화면 초기화(init)
       //NUMBER_OF_ADJECTIVE만큼 실험을 했다면 로그아웃 (이 때, user db의 isDone 필드가 True로 바뀌며 재접속 불가능)
-      if(data['time'] > 1200000){
+      if(data['time'] > 900000){
         // window.location = "http://127.0.0.1:5000/logIn";
         window.location = "http://130.211.240.166:5000/logIn";
 
