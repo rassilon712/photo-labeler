@@ -287,7 +287,7 @@ collection_log = db.log
 collection_current = db.Current_toLabel
 collection_before = db.Before_toLabel
 
-total_image_list = sorted(os.listdir(os.path.join(APP_ROOT,CONST_IMAGE_PATH)))
+total_image_list = sorted(os.listdir(APP_ROOT,CONST_IMAGE_PATH))
 total_num = len(total_image_list)
 
 collection_image.insert([{"image_id" : total_image_list[i], "image_index" : i} for i in range(len(total_image_list))])
