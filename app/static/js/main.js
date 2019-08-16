@@ -4,7 +4,7 @@ const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 // const IMAGE_PATH ='static/image/FFHQ_SAMPLE2'
-const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
+const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
 const SAMPLING_MODE = "RANDOM";
 
 /* Tool 기능 관련 변수들 */
@@ -785,7 +785,13 @@ function init(data){
     score = data['score'];
     current_cluster = data['current_cluster'];
     positive_attr_list = data['positive_attr_list'];
+    sorted_positive_attr_list = positive_attr_list.sort(function(x, y){
+      return d3.descending(x.score, y.score);
+   });
     negative_attr_list = data['negative_attr_list'];
+    sorted_negative_attr_list = negative_attr_list.sort(function(x, y){
+      return d3.descending(x.score, y.score);
+   });
 
     var temp_dots = []
     for(x in dots)
@@ -794,8 +800,9 @@ function init(data){
     for(let i=0;i<score.length;i++){
       score[i].score = parseFloat(dots[temp_dots.indexOf(score[i].image_id)].score) + score[i].score;
       dots[temp_dots.indexOf(score[i].image_id)].score = score[i].score;
-    }   
-    drawBar(positive_attr_list, negative_attr_list);
+    }
+
+    drawBar(sorted_positive_attr_list, sorted_negative_attr_list);
     markLabel(score);
     returnCurrent(beforeLabel);
     currentLabeling(current_cluster);
@@ -1077,8 +1084,19 @@ let rect_margin = 13;
 let axisRange = 579 - rect_margin - rect_width - rect_x;
 
 let scale = 0;
-if(typeof positive_attr_list[0] != "undefined" && typeof negative_attr_list[0] != "undefined"){  
-  scale = Math.max(positive_attr_list[0].score, negative_attr_list[0].score);
+
+sorted_positive_attr_list = positive_attr_list.sort(function(x, y){
+  return d3.descending(x.score, y.score);
+});
+
+
+sorted_negative_attr_list = negative_attr_list.sort(function(x, y){
+  return d3.descending(x.score, y.score);
+});
+if(typeof sorted_positive_attr_list[0] != "undefined" && typeof sorted_negative_attr_list[0] != "undefined"){  
+
+  scale = Math.max(sorted_positive_attr_list[0].score, sorted_negative_attr_list[0].score);
+
 }
 else{
   scale = 1;
