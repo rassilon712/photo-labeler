@@ -286,7 +286,7 @@ collection_log = db.log
 collection_current = db.Current_toLabel
 collection_before = db.Before_toLabel
 
-total_image_list = sorted(os.listdir(os.path.join(APP_ROOT,CONST_IMAGE_PATH)))
+total_image_list = sorted(os.listdir(os.path.join(APP_ROOT,CONST_IMAGE_PATH)))[0:1000]
 total_num = len(total_image_list)
 
 collection_image.insert([{"image_id" : total_image_list[i], "image_index" : i} for i in range(len(total_image_list))])
@@ -301,12 +301,16 @@ features2 = read_pck(CONST_PRETRAINED_FEATURE2)[0]
 features1.update(features2)
 
 features = {}
+print(sorted(features1.keys()))
 for key in sorted(features1.keys()):
     if not key in features:    # Depending on the goal, this line may not be neccessary
         features[key] = features1[key]
         if len(features.keys()) == 1000:
             break
-print(features.keys())
+print(len(total_image_list))
+print(features.keys(), len(features.keys()))
+
+
 
 attr_list = {}
 attr_list_temp = read_pck('attr_list.pickle')[0]
@@ -315,8 +319,8 @@ for key in sorted(attr_list_temp.keys()):
         attr_list[key] = attr_list_temp[key]
         if len(attr_list.keys()) == 1000:
             break
-print(attr_list.keys())
 
+print(len(attr_list.keys()))
 
 for each_key in sorted(attr_list):
     attr_list2.append(attr_list[each_key])
