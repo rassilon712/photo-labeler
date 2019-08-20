@@ -3,9 +3,10 @@ const NUMBER_OF_ADJECTIVE = 3;
 const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
-// const IMAGE_PATH ='static/image/FFHQ_SAMPLE2'
-const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
-const SAMPLING_MODE = "RANDOM";
+const BATCH_NUMBER = 12;
+const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
+// const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
+// const SAMPLING_MODE = "RANDOM";
 
 /* Tool 기능 관련 변수들 */
 
@@ -29,159 +30,482 @@ let totalDisplay = null;
 
 let beforeLabel = [];
 
-let doElsCollide = function(el1, el2) { 
-  if(el1 != null && el2 != null){
+/* 드래그앤 드랍 */
+
+// let doElsCollide = function(el1, el2) { 
+//   if(el1 != null && el2 != null){
     
-    rect1 = new cumulativeOffset(el1);
-    rect2 = new cumulativeOffset(el2);
+//     rect1 = new cumulativeOffset(el1);
+//     rect2 = new cumulativeOffset(el2);
 
-    el1.offsetBottom= rect1.top + el1.offsetHeight;
-    el1.offsetRight = rect1.left + el1.offsetWidth;
-    el2.offsetBottom = rect2.top + 15 + el2.offsetHeight;
-    el2.offsetRight = rect2.left - 14 + el2.offsetWidth;
+//     el1.offsetBottom= rect1.top + el1.offsetHeight;
+//     el1.offsetRight = rect1.left + el1.offsetWidth;
+//     el2.offsetBottom = rect2.top + 15 + el2.offsetHeight;
+//     el2.offsetRight = rect2.left - 14 + el2.offsetWidth;
 
-    return !((el1.offsetBottom < rect2.top) ||
-              (rect1.top > el2.offsetBottom) ||
-              (el1.offsetRight < rect2.left) ||
-              (rect1.left > el2.offsetRight))
-            }
+//     return !((el1.offsetBottom < rect2.top) ||
+//               (rect1.top > el2.offsetBottom) ||
+//               (el1.offsetRight < rect2.left) ||
+//               (rect1.left > el2.offsetRight))
+//             }
 
-};
+// };
 
-function onMouseDown_clone(e, item) {
+// function onMouseDown_clone(e, item) {
   
-  let isOver = tempTodo.className.includes("over");
-  if(ctrlPressed){
-    if(isOver){
-      tempTodo.className = tempTodo.className.replace(" over","");
-      item.className = tempTodo.className.replace(" over","");
+//   let isOver = tempTodo.className.includes("over");
+//   if(ctrlPressed){
+//     if(isOver){
+//       tempTodo.className = tempTodo.className.replace(" over","");
+//       item.className = tempTodo.className.replace(" over","");
 
-    }
-    else{
-      multiChoice = true;
-      tempTodo.className +=' over';
-      let multi_list = document.getElementsByClassName('over');   
-    }
-  }
-  else{
-    if(isOver){
-  e.preventDefault();  
-  isMouseDown = true;
-  currentTodo = item;
-  currentList = [];
-  let multi_items = document.getElementsByClassName('over');
-  tempTodo_list = [];
-  for(let i=0;i<multi_items.length;i++){
-    tempTodo_list.push(multi_items[i]);
+//     }
+//     else{
+//       multiChoice = true;
+//       tempTodo.className +=' over';
+//       let multi_list = document.getElementsByClassName('over');   
+//     }
+//   }
+//   else{
+//     if(isOver){
+//   e.preventDefault();  
+//   isMouseDown = true;
+//   currentTodo = item;
+//   currentList = [];
+//   let multi_items = document.getElementsByClassName('over');
+//   tempTodo_list = [];
+//   for(let i=0;i<multi_items.length;i++){
+//     tempTodo_list.push(multi_items[i]);
     
-    let multi_clone = cloneImage(multi_items[i]);
-    if(multi_clone.getAttribute('slot') != item.getAttribute('slot')){
-      $(".img_temp").append(multi_clone);
-      currentList.push(multi_clone)
-    }
-    else{
-      currentList.push(item);
-    }
-  }
+//     let multi_clone = cloneImage(multi_items[i]);
+//     if(multi_clone.getAttribute('slot') != item.getAttribute('slot')){
+//       $(".img_temp").append(multi_clone);
+//       currentList.push(multi_clone)
+//     }
+//     else{
+//       currentList.push(item);
+//     }
+//   }
 
-  for(let i=0;i<currentList.length;i++){
-    currentList[i].style.zIndex = "2";  
-    currentList[i].style.filter = "brightness(50%)";
-  }
-  mouseOffset_list = [];
-  for(let i=0;i<currentList.length;i++){
-    mouseOffset_list.push({x: currentList[i].offsetLeft - e.clientX, y: currentList[i].offsetTop - e.clientY});
-    tempTodo_list[i].remove();
-  }
-}
-    else{
-  e.preventDefault();
-  isMouseDown = true;
-  item.style.zIndex = "2";
-  currentList = [];
-  currentList.push(item);
-  currentTodo = item;
-  mouseOffset_list = [];
-  mouseOffset_list.push({x: item.offsetLeft - e.clientX, y: item.offsetTop - e.clientY});
-  tempTodo.remove();
-  item.style.filter = "brightness(50%)";
-    }
-  }
-}
+//   for(let i=0;i<currentList.length;i++){
+//     currentList[i].style.zIndex = "2";  
+//     currentList[i].style.filter = "brightness(50%)";
+//   }
+//   mouseOffset_list = [];
+//   for(let i=0;i<currentList.length;i++){
+//     mouseOffset_list.push({x: currentList[i].offsetLeft - e.clientX, y: currentList[i].offsetTop - e.clientY});
+//     tempTodo_list[i].remove();
+//   }
+// }
+//     else{
+//   e.preventDefault();
+//   isMouseDown = true;
+//   item.style.zIndex = "2";
+//   currentList = [];
+//   currentList.push(item);
+//   currentTodo = item;
+//   mouseOffset_list = [];
+//   mouseOffset_list.push({x: item.offsetLeft - e.clientX, y: item.offsetTop - e.clientY});
+//   tempTodo.remove();
+//   item.style.filter = "brightness(50%)";
+//     }
+//   }
+// }
 
-function onMouseMove_clone(e) {
-  e.preventDefault();
-  if(isMouseDown) {
-    for(let i=0;i<currentList.length;i++){
-      currentList[i].style.left = e.clientX + mouseOffset_list[i].x + "px";
-      currentList[i].style.top = e.clientY + mouseOffset_list[i].y + "px";
-    }
-  }
-}
+// function onMouseMove_clone(e) {
+//   e.preventDefault();
+//   if(isMouseDown) {
+//     for(let i=0;i<currentList.length;i++){
+//       currentList[i].style.left = e.clientX + mouseOffset_list[i].x + "px";
+//       currentList[i].style.top = e.clientY + mouseOffset_list[i].y + "px";
+//     }
+//   }
+// }
 
-function onMouseUp_clone(e, item) {
-  if(ctrlPressed){
+// function onMouseUp_clone(e, item) {
+//   if(ctrlPressed){
 
-  }
-  else{
-    currentTodo.style.zIndex = "1";
-    isMouseDown = false;
-    item.style.filter = "brightness(100%)";
-  }
-}
+//   }
+//   else{
+//     currentTodo.style.zIndex = "1";
+//     isMouseDown = false;
+//     item.style.filter = "brightness(100%)";
+//   }
+// }
 
-function onMouseOver(e, item) {
-  if(!isMouseDown){
+// function onMouseOver(e, item) {
+//   if(!isMouseDown){
 
-    item.style.filter = "brightness(130%)";
-    todo_clone = cloneImage(item);
-    tempTodo = item;
+//     item.style.filter = "brightness(130%)";
+//     todo_clone = cloneImage(item);
+//     tempTodo = item;
     
-    if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
-    $(".img_temp").append(todo_clone);
-    setListener_clone(todo_clone);
-  }
-} 
+//     if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
+//     $(".img_temp").append(todo_clone);
+//     setListener_clone(todo_clone);
+//   }
+// } 
 
-var cumulativeOffset = function(element) {
-  var top = 0, left = 0;
-  do {
-      top += element.offsetTop  || 0;
-      left += element.offsetLeft || 0;
-      element = element.offsetParent;
-  } while(element);
-  return {
-      top: top,
-      left: left
-  };
-};
+// var cumulativeOffset = function(element) {
+//   var top = 0, left = 0;
+//   do {
+//       top += element.offsetTop  || 0;
+//       left += element.offsetLeft || 0;
+//       element = element.offsetParent;
+//   } while(element);
+//   return {
+//       top: top,
+//       left: left
+//   };
+// };
 
-function cloneImage(item){
-  todo_clone = item.cloneNode();
-    todo_clone.position = "absolute";
-    todo_clone.className = todo_clone.className.replace(" over","");
+// function cloneImage(item){
+//   todo_clone = item.cloneNode();
+//     todo_clone.position = "absolute";
+//     todo_clone.className = todo_clone.className.replace(" over","");
 
-    var top = document.body.scrollTop;
+//     var top = document.body.scrollTop;
 
-    rect = new cumulativeOffset(item);
-    todo_clone.style.left = rect.left - 14 + "px";
-    todo_clone.style.top = rect.top - 15 - top + "px";
+//     rect = new cumulativeOffset(item);
+//     todo_clone.style.left = rect.left - 14 + "px";
+//     todo_clone.style.top = rect.top - 15 - top + "px";
     
 
-    if(item.parentNode.className == "left"){
-      todo_clone.setAttribute('id', 0);
-    }
-    else if(item.parentNode.className == "right"){
-      todo_clone.setAttribute('id', 2);
-    }
-    else{
-      todo_clone.setAttribute('id', 1);
-    }
-    todo_clone.setAttribute('slot', item.parentNode.id);
-    return todo_clone;
+//     if(item.parentNode.className == "left"){
+//       todo_clone.setAttribute('id', 0);
+//     }
+//     else if(item.parentNode.className == "right"){
+//       todo_clone.setAttribute('id', 2);
+//     }
+//     else{
+//       todo_clone.setAttribute('id', 1);
+//     }
+//     todo_clone.setAttribute('slot', item.parentNode.id);
+//     return todo_clone;
+// }
+
+// function onMouseOver_clone(e, item) {
+//   if(!isMouseDown){
+//     item.style.filter = "brightness(130%)";
+
+//     let jObject = new Object();  
+//     jObject.image_id = item.src.split(/[/]+/).pop();
+  
+//     jQuery.ajaxSettings.traditional = true;
+    
+//     attrParam = JSON.stringify(jObject);
+
+//     $.ajax({
+//       url : "/getAttribute",
+//       type: 'POST',
+//       data: {"jsonData" : attrParam},
+//       dataType:'json',
+//       success: function(data) {
+//         console.log(data['attribute']);
+                  
+//             if(typeof $(".attr_on").attr("class") != "undefined"){
+//               $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+//             }
+//         for(let i=0;i<data['attribute'].length;i++){
+   
+//           $('#'.concat(data['attribute'][i])).attr('class', 'node'.concat(" attr_on"));
+//           // $('#'.concat(data['attribute'][i])).css('fill', 'red');
+//         }
+//       },
+//       error: function(x, e) {
+//           alert("error");
+//       }
+//   });
+  
+//   }
+  
+// }
+
+
+// function onMouseOut(e, item) {
+//   if(!isMouseDown){
+//     item.style.filter = "brightness(100%)";
+//   }
+// }
+
+// function onMouseOut_clone(e, item) {
+//   if(!isMouseDown){  
+//   if(typeof $(".attr_on").attr("class") != "undefined"){
+//     $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+//   }
+//   item.style.filter = "brightness(100%)";
+//     item.remove();
+//     if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
+//   }
+// }
+
+// function setListeners(todoItems) {
+//   for(let i = 0; i < todoItems.length; i++) {
+//   let item = todoItems[i];
+//   item.addEventListener("mouseout", (e) => {onMouseOut(e, item); });
+//   item.addEventListener("mouseover", (e) => { onMouseOver(e, item); });
+//   }
+// }
+ 
+// function setListener(todoItem) {
+//   todoItem.addEventListener("mouseout", (e) => {onMouseOut(e, todoItem); });
+//   todoItem.addEventListener("mouseover", (e) => { onMouseOver(e, todoItem); });
+// }
+  
+// function setListener_clone(todoItem) {
+  
+//   todoItem.addEventListener("mousedown", (e) => { onMouseDown_clone(e, todoItem); });
+//   todoItem.addEventListener("mouseover", (e) => { onMouseOver_clone(e, todoItem); });
+//   todoItem.addEventListener("mouseout", (e) => { onMouseOut_clone(e, todoItem); });
+//   document.body.addEventListener("mousemove", (e) => {
+//     onMouseMove_clone(e);
+//   });
+//   todoItem.addEventListener("mouseup", (e) => {
+//     onMouseUp_clone(e, todoItem);
+//   }); 
+// }
+
+// /* 매 0.1초마다 실행하는 함수 */
+// setInterval(() => {
+//   let areas = document.getElementsByClassName("red-blue");
+  
+//   /* 매 0.1초마다 emptyCheck 변수로 마지막 row가 비어있으면 image row를 삭제해 동적으로 container의 크기를 결정*/
+//   let check = 0;
+//   for(let i = 0; i < areas.length; i++) {
+//     emptyCheck = 0;
+//     let lastRows = areas[i].getElementsByClassName('image_row')[areas[i].getElementsByClassName('image_row').length-1].getElementsByTagName('div');
+//     for(let j=0; j < lastRows.length; j++){
+//       if(!lastRows[j].hasChildNodes()){
+//         emptyCheck = emptyCheck + 1;
+//       }
+//     }
+//     if(
+//       emptyCheck == lastRows.length
+//       && areas[i].getElementsByClassName('image_row').length > 3){
+//       areas[i].getElementsByClassName('image_row')[areas[i].getElementsByClassName('image_row').length-1].remove();
+//     }
+    
+
+//     //check : 아이템이 속한 container의 수를 체크하는 변수
+//     // doElsCollide 함수로 현재 드래그 중인 아이템과 container area가 위치상 겹쳐지게 되면 container area에 빨간 줄을 띄우고
+//     // 그 상태에서 마우스 버튼이 올라가게 되면 그 container로 드래그 중인 이미지를 삽입
+
+//     areas[i].className = areas[i].className.replace("cont_on", "");
+    
+//       if(doElsCollide(currentTodo, areas[i])) {
+//         areas[i].className += " cont_on";
+//         check = check + 1;
+//         if(!isMouseDown) {
+//           for(let j=0; j < currentList.length; j++){
+//             snapTodo(currentList[j], areas[i], i);
+//           }
+//           currentList = [];
+        
+//       }
+//     }
+//   }  
+    
+
+//   //check ==0, 드래그 중인 이미지가 겹쳐지는 container가 없을 때, 마우스 버튼이 올라가게 되면
+//   // 해당 이미지의 원래 container로 이미지를 삽입
+//     if(check == 0 && currentTodo != null) {
+//       if(!isMouseDown) {
+//         let i = currentTodo.getAttribute('id');
+//         for(let j=0; j < currentList.length; j++){
+//           snapTodo(currentList[j], areas[i], i);
+//         }
+//         currentList = [];
+//       }
+//     }
+  
+
+  
+// }, 100);
+
+// //container에 todo이미지를 삽입하는 함수
+// function snapTodo(todo, container,index) {
+//   area_list = ["left","center","right"];
+//   id_list = ["L","N","R"];
+//   if(typeof $(".attr_on").attr("class") != "undefined"){
+//     $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+//   }
+
+// //log data를 저장하기 위한 jObject 선언
+//   let jObject = new Object();
+//   jObject.Time = js_yyyy_mm_dd_hh_mm_ss ();
+//   jObject.adjective = keyword;
+//   jObject.What = todo.src.split(/[/]+/).pop();
+//   if(todo.getAttribute('id') == 0){
+//     jObject.From = "left"
+//   }
+//   else if(todo.getAttribute('id') == 1){
+//     jObject.From = "center"
+//   }
+//   else{
+//     jObject.From = "right"
+//   }
+//   jObject.To = area_list[index]
+//   logParam = JSON.stringify(jObject)
+
+// //ajax 통신을 통해 이미지가 어디서 어디로 옮겨졌는지 데이터베이스에 로그데이터 저장
+//   jQuery.ajaxSettings.traditional = true;
+//   $.ajax({
+//     url : "/getLog",
+//     type: 'POST',
+//     data: {"jsonData" : logParam},
+//     dataType:'json',
+//     success: function(data) {
+//     },
+//     error: function(x, e) {
+//         alert("error");
+//     }
+// });
+
+//   // 드래그 중인 이미지가 image row에 여유 공간이 있으면 해당 image row에 image를 append
+//   let fullCount = 0;
+//   let lastID = "";
+//   let row_count = container.getElementsByClassName('image_row')[0].childElementCount;
+//     temp_list = document.getElementsByClassName(area_list[index]);
+//     for(let i=0;i<temp_list.length;i++){
+//       let item = temp_list[i];
+//       fullCount = fullCount + 1;
+//       if(i == (temp_list.length - 1)){
+//         lastID = item.id;
+//       }
+//       if(!item.hasChildNodes()){
+//         todo_clone = todo.cloneNode();
+//         todo.remove();
+//         item.append(todo_clone);
+//         todo_clone.className = todo_clone.className.replace(" over","");
+//         setListener(todo_clone);
+//         todo_clone.style.left = 0 + "px";
+//         todo_clone.style.top = 0 + "px";
+//         todo_clone.style.filter = "brightness(100%)";
+//         currentTodo = null;
+//         fullCount = 0;
+//         break;
+//       }
+//     }
+    
+//     // 만약 full count가 전체 row의 개수와 같다(모든 image row가 image로 가득 찼다면) 새로운 image row를 만들어 div 확장
+//     if(fullCount == temp_list.length){
+//       new_row = document.createElement('div');
+//       for(let i=1;i<=row_count;i++){  
+//         new_slot = document.createElement('div');
+//         new_slot.className = area_list[index];
+//         new_slot.id = id_list[index] + (parseInt(lastID.replace(id_list[index],""))+i);
+        
+//         if(i==1){
+//           todo_clone = todo.cloneNode();
+//           todo.remove();
+//           new_slot.append(todo_clone);
+//           todo_clone.className = todo_clone.className.replace(" over","");  
+//           setListener(todo_clone);
+//           todo_clone.style.left = 0 + "px";
+//           todo_clone.style.top = 0 + "px";
+//           currentTodo = null;
+//           fullCount = 0; 
+//         }
+//         new_row.append(new_slot); 
+//       }
+//       new_row.className = "image_row";
+//       container.append(new_row);
+//     }
+//   }
+// /*------------------------------------------------------------------*/
+// /* 키보드 기능 */
+
+// document.addEventListener("keydown", checkKeyPressed, false);
+// document.addEventListener("keyup", checkKeyUp, false);
+// document.addEventListener("mousedown", checkMousedown, false);
+
+// //multiChoice 상태에서 외부 지점을 클릭하면 multiChoice된 image 모두 해제
+// function checkMousedown(e) {
+//   if(multiChoice && !ctrlPressed){
+//     let multi_list = document.getElementsByClassName('over');
+//     let multi_length = multi_list.length;
+//     for(let i=0;i<multi_length;i++){
+//       multi_list[0].className = multi_list[0].className.replace(" over",""); 
+//     }
+//   }
+// }
+
+// //키보드 관련 컨트롤 함수
+
+// //control 키 눌림
+// function checkKeyPressed(e) {
+//   if (e.keyCode == "17" || e.keyCode == "91") {
+//       ctrlPressed = true;
+//   }
+// }
+
+// function checkKeyUp(e) {
+
+// //control 키 떼짐
+//   if (e.keyCode == "17"|| e.keyCode == "91") {
+//     ctrlPressed = false;
+//   }
+
+// //multi_choice된 상태에서 'a' key가 떼지면 모두 왼쪽으로 이동
+//   else if (e.keyCode == "65"){
+//   if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
+//   let multi_list = document.querySelectorAll('.over');
+//   let areas = document.getElementsByClassName("red-blue");
+  
+//   for(let i=0;i<multi_list.length;i++){
+//       snapTodo(multi_list.item(i),areas[0],0);
+//     }
+//   }
+
+// //multi_choice된 상태에서 's' key가 떼지면 모두 가운데쪽으로 이동
+//   else if (e.keyCode == "87"){
+//     if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
+//   let multi_list = document.querySelectorAll('.over');  
+//   let areas = document.getElementsByClassName("red-blue");
+//     for(let i=0;i<multi_list.length;i++){
+//       snapTodo(multi_list.item(i),areas[1],1);
+//     }
+//   }
+  
+// //multi_choice된 상태에서 'd' key가 떼지면 모두 오른쪽으로 이동
+//   else if (e.keyCode == "68"){
+//   if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
+//   let multi_list = document.querySelectorAll('.over');
+//   let areas = document.getElementsByClassName("red-blue");
+//     for(let i=0;i<multi_list.length;i++){
+//       snapTodo(multi_list.item(i),areas[2],2);
+//     }
+//   }
+
+// //'space bar' key가 떼지면 confirm
+//   else if (e.keyCode == "83"){
+//     if(confirm_button.disabled == false){
+//       confirm_click();
+
+//     }
+//   }
+// }
+
+// /*------------------------------------------------------------------*/
+
+
+function setListeners(todoItems) {
+  for(let i = 0; i < todoItems.length; i++) {
+  let item = todoItems[i];
+  item.addEventListener("mouseout", (e) => {onMouseOut(e, item); });
+  item.addEventListener("mouseover", (e) => { onMouseOver(e, item); });
+  item.addEventListener("mousedown", (e) => { onMouseDown(e, item); });
+  }
 }
 
-function onMouseOver_clone(e, item) {
+function setListener(todoItem) {
+  todoItem.addEventListener("mouseout", (e) => {onMouseOut(e, todoItem); });
+  todoItem.addEventListener("mouseover", (e) => { onMouseOver(e, todoItem); });
+  todoItem.addEventListener("mousedown", (e) => { onMouseDown(e, todoItem); });
+}
+
+
+function onMouseOver  (e, item) {
   if(!isMouseDown){
     item.style.filter = "brightness(130%)";
 
@@ -212,12 +536,9 @@ function onMouseOver_clone(e, item) {
       error: function(x, e) {
           alert("error");
       }
-  });
-  
-  }
-  
+  }); 
 }
-
+}
 
 function onMouseOut(e, item) {
   if(!isMouseDown){
@@ -225,265 +546,86 @@ function onMouseOut(e, item) {
   }
 }
 
-function onMouseOut_clone(e, item) {
-  if(!isMouseDown){  
-  if(typeof $(".attr_on").attr("class") != "undefined"){
-    $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
-  }
-  item.style.filter = "brightness(100%)";
-    item.remove();
-    if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
-  }
-}
-
-function setListeners(todoItems) {
-  for(let i = 0; i < todoItems.length; i++) {
-  let item = todoItems[i];
-  item.addEventListener("mouseout", (e) => {onMouseOut(e, item); });
-  item.addEventListener("mouseover", (e) => { onMouseOver(e, item); });
-  }
-}
- 
-function setListener(todoItem) {
-  todoItem.addEventListener("mouseout", (e) => {onMouseOut(e, todoItem); });
-  todoItem.addEventListener("mouseover", (e) => { onMouseOver(e, todoItem); });
-}
+function onMouseDown(e, item) {
   
-function setListener_clone(todoItem) {
-  
-  todoItem.addEventListener("mousedown", (e) => { onMouseDown_clone(e, todoItem); });
-  todoItem.addEventListener("mouseover", (e) => { onMouseOver_clone(e, todoItem); });
-  todoItem.addEventListener("mouseout", (e) => { onMouseOut_clone(e, todoItem); });
-  document.body.addEventListener("mousemove", (e) => {
-    onMouseMove_clone(e);
-  });
-  todoItem.addEventListener("mouseup", (e) => {
-    onMouseUp_clone(e, todoItem);
-  }); 
-}
+  let isOver = item.className.includes("over");
 
-/* 매 0.1초마다 실행하는 함수 */
-setInterval(() => {
-  let areas = document.getElementsByClassName("red-blue");
-  
-  /* 매 0.1초마다 emptyCheck 변수로 마지막 row가 비어있으면 image row를 삭제해 동적으로 container의 크기를 결정*/
-  let check = 0;
-  for(let i = 0; i < areas.length; i++) {
-    emptyCheck = 0;
-    let lastRows = areas[i].getElementsByClassName('image_row')[areas[i].getElementsByClassName('image_row').length-1].getElementsByTagName('div');
-    for(let j=0; j < lastRows.length; j++){
-      if(!lastRows[j].hasChildNodes()){
-        emptyCheck = emptyCheck + 1;
-      }
+    if(isOver){
+      item.className = item.className.replace(" over","");
+      item.className = item.className.replace(" over","");
+
     }
-    if(
-      emptyCheck == lastRows.length
-      && areas[i].getElementsByClassName('image_row').length > 3){
-      areas[i].getElementsByClassName('image_row')[areas[i].getElementsByClassName('image_row').length-1].remove();
+    else{
+      multiChoice = true;
+      item.className  += ' over';
+      let multi_list = document.getElementsByClassName('over');   
     }
-    
+  }
 
-    //check : 아이템이 속한 container의 수를 체크하는 변수
-    // doElsCollide 함수로 현재 드래그 중인 아이템과 container area가 위치상 겹쳐지게 되면 container area에 빨간 줄을 띄우고
-    // 그 상태에서 마우스 버튼이 올라가게 되면 그 container로 드래그 중인 이미지를 삽입
-
-    areas[i].className = areas[i].className.replace("cont_on", "");
+  function checkKeyUp(e) {
+    //'space bar' key가 떼지면 confirm
+      if (e.keyCode == "32"){
+        if(confirm_button.disabled == false){
+          confirm_click();
     
-      if(doElsCollide(currentTodo, areas[i])) {
-        areas[i].className += " cont_on";
-        check = check + 1;
-        if(!isMouseDown) {
-          for(let j=0; j < currentList.length; j++){
-            snapTodo(currentList[j], areas[i], i);
-          }
-          currentList = [];
-        
-      }
-    }
-  }  
-    
-
-  //check ==0, 드래그 중인 이미지가 겹쳐지는 container가 없을 때, 마우스 버튼이 올라가게 되면
-  // 해당 이미지의 원래 container로 이미지를 삽입
-    if(check == 0 && currentTodo != null) {
-      if(!isMouseDown) {
-        let i = currentTodo.getAttribute('id');
-        for(let j=0; j < currentList.length; j++){
-          snapTodo(currentList[j], areas[i], i);
         }
-        currentList = [];
-      }
-    }
-  
-
-  
-}, 100);
-
-//container에 todo이미지를 삽입하는 함수
-function snapTodo(todo, container,index) {
-  area_list = ["left","center","right"];
-  id_list = ["L","N","R"];
-  if(typeof $(".attr_on").attr("class") != "undefined"){
-    $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
-  }
-
-//log data를 저장하기 위한 jObject 선언
-  let jObject = new Object();
-  jObject.Time = js_yyyy_mm_dd_hh_mm_ss ();
-  jObject.adjective = keyword;
-  jObject.What = todo.src.split(/[/]+/).pop();
-  if(todo.getAttribute('id') == 0){
-    jObject.From = "left"
-  }
-  else if(todo.getAttribute('id') == 1){
-    jObject.From = "center"
-  }
-  else{
-    jObject.From = "right"
-  }
-  jObject.To = area_list[index]
-  logParam = JSON.stringify(jObject)
-
-//ajax 통신을 통해 이미지가 어디서 어디로 옮겨졌는지 데이터베이스에 로그데이터 저장
-  jQuery.ajaxSettings.traditional = true;
-  $.ajax({
-    url : "/getLog",
-    type: 'POST',
-    data: {"jsonData" : logParam},
-    dataType:'json',
-    success: function(data) {
-    },
-    error: function(x, e) {
-        alert("error");
-    }
-});
-
-  // 드래그 중인 이미지가 image row에 여유 공간이 있으면 해당 image row에 image를 append
-  let fullCount = 0;
-  let lastID = "";
-  let row_count = container.getElementsByClassName('image_row')[0].childElementCount;
-    temp_list = document.getElementsByClassName(area_list[index]);
-    for(let i=0;i<temp_list.length;i++){
-      let item = temp_list[i];
-      fullCount = fullCount + 1;
-      if(i == (temp_list.length - 1)){
-        lastID = item.id;
-      }
-      if(!item.hasChildNodes()){
-        todo_clone = todo.cloneNode();
-        todo.remove();
-        item.append(todo_clone);
-        todo_clone.className = todo_clone.className.replace(" over","");
-        setListener(todo_clone);
-        todo_clone.style.left = 0 + "px";
-        todo_clone.style.top = 0 + "px";
-        todo_clone.style.filter = "brightness(100%)";
-        currentTodo = null;
-        fullCount = 0;
-        break;
       }
     }
     
-    // 만약 full count가 전체 row의 개수와 같다(모든 image row가 image로 가득 찼다면) 새로운 image row를 만들어 div 확장
-    if(fullCount == temp_list.length){
-      new_row = document.createElement('div');
-      for(let i=1;i<=row_count;i++){  
-        new_slot = document.createElement('div');
-        new_slot.className = area_list[index];
-        new_slot.id = id_list[index] + (parseInt(lastID.replace(id_list[index],""))+i);
-        
-        if(i==1){
-          todo_clone = todo.cloneNode();
-          todo.remove();
-          new_slot.append(todo_clone);
-          todo_clone.className = todo_clone.className.replace(" over","");  
-          setListener(todo_clone);
-          todo_clone.style.left = 0 + "px";
-          todo_clone.style.top = 0 + "px";
-          currentTodo = null;
-          fullCount = 0; 
-        }
-        new_row.append(new_slot); 
-      }
-      new_row.className = "image_row";
-      container.append(new_row);
-    }
-  }
-/*------------------------------------------------------------------*/
-/* 키보드 기능 */
-
-document.addEventListener("keydown", checkKeyPressed, false);
 document.addEventListener("keyup", checkKeyUp, false);
-document.addEventListener("mousedown", checkMousedown, false);
 
-//multiChoice 상태에서 외부 지점을 클릭하면 multiChoice된 image 모두 해제
-function checkMousedown(e) {
-  if(multiChoice && !ctrlPressed){
-    let multi_list = document.getElementsByClassName('over');
-    let multi_length = multi_list.length;
-    for(let i=0;i<multi_length;i++){
-      multi_list[0].className = multi_list[0].className.replace(" over",""); 
-    }
-  }
-}
 
-//키보드 관련 컨트롤 함수
+//     if(isOver){
+//   e.preventDefault();  
+//   isMouseDown = true;
+//   currentTodo = item;
+//   currentList = [];
+//   let multi_items = document.getElementsByClassName('over');
+//   tempTodo_list = [];
+//   for(let i=0;i<multi_items.length;i++){
+//     tempTodo_list.push(multi_items[i]);
+    
+//     let multi_clone = cloneImage(multi_items[i]);
+//     if(multi_clone.getAttribute('slot') != item.getAttribute('slot')){
+//       $(".img_temp").append(multi_clone);
+//       currentList.push(multi_clone)
+//     }
+//     else{
+//       currentList.push(item);
+//     }
+//   }
 
-//control 키 눌림
-function checkKeyPressed(e) {
-  if (e.keyCode == "17" || e.keyCode == "91") {
-      ctrlPressed = true;
-  }
-}
+//   for(let i=0;i<currentList.length;i++){
+//     currentList[i].style.zIndex = "2";  
+//     currentList[i].style.filter = "brightness(50%)";
+//   }
+//   mouseOffset_list = [];
+//   for(let i=0;i<currentList.length;i++){
+//     mouseOffset_list.push({x: currentList[i].offsetLeft - e.clientX, y: currentList[i].offsetTop - e.clientY});
+//     tempTodo_list[i].remove();
+//   }
+// }
+//     else{
+//   e.preventDefault();
+//   isMouseDown = true;
+//   item.style.zIndex = "2";
+//   currentList = [];
+//   currentList.push(item);
+//   currentTodo = item;
+//   mouseOffset_list = [];
+//   mouseOffset_list.push({x: item.offsetLeft - e.clientX, y: item.offsetTop - e.clientY});
+//   tempTodo.remove();
+//   item.style.filter = "brightness(50%)";
+//     }
+  // }
 
-function checkKeyUp(e) {
 
-//control 키 떼짐
-  if (e.keyCode == "17"|| e.keyCode == "91") {
-    ctrlPressed = false;
-  }
 
-//multi_choice된 상태에서 'a' key가 떼지면 모두 왼쪽으로 이동
-  else if (e.keyCode == "65"){
-  if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
-  let multi_list = document.querySelectorAll('.over');
-  let areas = document.getElementsByClassName("red-blue");
-  
-  for(let i=0;i<multi_list.length;i++){
-      snapTodo(multi_list.item(i),areas[0],0);
-    }
-  }
 
-//multi_choice된 상태에서 's' key가 떼지면 모두 가운데쪽으로 이동
-  else if (e.keyCode == "87"){
-    if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
-  let multi_list = document.querySelectorAll('.over');  
-  let areas = document.getElementsByClassName("red-blue");
-    for(let i=0;i<multi_list.length;i++){
-      snapTodo(multi_list.item(i),areas[1],1);
-    }
-  }
-  
-//multi_choice된 상태에서 'd' key가 떼지면 모두 오른쪽으로 이동
-  else if (e.keyCode == "68"){
-  if ( temp.hasChildNodes() ) { temp.removeChild( temp.firstChild ); }
-  let multi_list = document.querySelectorAll('.over');
-  let areas = document.getElementsByClassName("red-blue");
-    for(let i=0;i<multi_list.length;i++){
-      snapTodo(multi_list.item(i),areas[2],2);
-    }
-  }
+/*---------------------------------------------------------------------*/
 
-//'space bar' key가 떼지면 confirm
-  else if (e.keyCode == "83"){
-    if(confirm_button.disabled == false){
-      confirm_click();
 
-    }
-  }
-}
 
-/*------------------------------------------------------------------*/
 
 class Queue {
   constructor() {
@@ -551,15 +693,16 @@ function confirm_click(){
 
 //logout 누름
 function logout_click(){
-  window.location = "http://130.211.240.166:5000//logout";
-  // window.location.href = "http://127.0.0.1:5000/logout";
+  // window.location = "http://130.211.240.166:5000/logout";
+  window.location.href = "http://127.0.0.1:5000/logout";
 }  
 
 function classifyImages(){
 
-  if(typeof $(".attr_on").attr("class") != "undefined"){
-    $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
-  }
+  // if(typeof $(".attr_on").attr("class") != "undefined"){
+  //   $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+  // }
+
   // 배치된 image를 jarray형식으로 백엔드(/getData)로 전송
   let todo_list = document.getElementsByClassName("row")[0].getElementsByClassName("todo-item");
   let Jarray = new Array();
@@ -567,20 +710,13 @@ function classifyImages(){
   console.log(timeStamp);
   timeStamp = JSON.stringify(timeStamp);
 
-
   for(let i=0;i<todo_list.length;i++){
     let left_right = 0;
-    if(todo_list[i].parentNode.className=='left'){
+    if(todo_list[i].className.includes("over")){
       left_right = 1;
-      var temp = todo_list[i].cloneNode();
     }
-    else if(todo_list[i].parentNode.className=='right'){
+    else {
       left_right = -1;
-      var temp = todo_list[i].cloneNode();
-    }
-    else{
-      left_right = 0;
-      var temp = todo_list[i].cloneNode();
     }
 
     let jObject = new Object();
@@ -604,16 +740,16 @@ function classifyImages(){
       //NUMBER_OF_ADJECTIVE만큼 실험을 안 했다면 화면 초기화(init)
       //NUMBER_OF_ADJECTIVE만큼 실험을 했다면 로그아웃 (이 때, user db의 isDone 필드가 True로 바뀌며 재접속 불가능)
       if(data['time'] > 900000){
-        // window.location = "http://127.0.0.1:5000/logIn";
-        window.location = "http://130.211.240.166:5000/logIn";
+        window.location = "http://127.0.0.1:5000/logIn";
+        // window.location = "http://130.211.240.166:5000/logIn";
 
       }
       if(data['index'] < NUMBER_OF_ADJECTIVE){
         init(data);
       }
       else{
-        // window.location = "http://127.0.0.1:5000/logIn";
-        window.location = "http://130.211.240.166:5000/logIn";
+        window.location = "http://127.0.0.1:5000/logIn";
+        // window.location = "http://130.211.240.166:5000/logIn";
       }
     },
     error: function(x, e) {
@@ -812,12 +948,7 @@ function init(data){
     }
   }
   else{
-    if(SAMPLING_MODE == "RANDOM"){
-      selectList(total_queue,0,BLUE_IMAGE_NUMBER+RED_IMAGE_NUMBER+NEUTRAL_IMAGE_NUMBER,0);
-    }
-    else{
-      selectList(total_queue,BLUE_IMAGE_NUMBER,NEUTRAL_IMAGE_NUMBER,RED_IMAGE_NUMBER);  
-    }
+      selectList(total_queue,0,BATCH_NUMBER,0);
   }
 
   $('.keyword').text(keyword);
@@ -839,11 +970,11 @@ function init(data){
 
 var margin = { top: 0, right: 30, bottom: 0, left: 0},
 tsne_width = 350;
-tsne_height = 1017;
+tsne_height = 480;
 var tsne_svg = d3.select("#tsne_div")
           .append("svg")
           .attr("width", 330 + "px")
-          .attr("height",  1017 + "px")
+          .attr("height",  480 + "px")
           .style("border","none") 
           .style("background-color", "none")
           .call(d3.zoom()
@@ -851,7 +982,7 @@ var tsne_svg = d3.select("#tsne_div")
           tsne_svg.attr("transform", d3.event.transform)
                  })
                  .scaleExtent([1,4])
-                 .translateExtent([[0,0],[350,1017]])
+                 .translateExtent([[0,0],[350,480]])
             )
           .append("g");
 
@@ -874,8 +1005,8 @@ tsne_svg1.append('rect')
 
 // legend 정의
 var legend = tsne_svg1.selectAll(".legend")
-                 .data([{text:'Positive', color:'rgb(65,122,255,1)', border:"transparent"},
-                       {text:'Negative', color:'rgb(242,108,108,1)', border:"transparent"},
+                 .data([{text:'Positive', color:'#F26C6C', border:"transparent"},
+                       {text:'Negative', color:"#417AFF", border:"transparent"},
                       {text: 'Not labeled', color:'#AAAAAA', border:"transparent"},
                       {text: 'Current Image', color:'#FFFFFF', border:"#FF0000"}])
                  .enter().append("g")
@@ -938,8 +1069,8 @@ for(let i=0;i<dots.length;i++){
 
 function scaleData(data,xList,yList){
   for(let i =0;i<data.length;i++){
-    data[i].x = ( data[i].x - d3.min(xList) ) / (d3.max(xList) - d3.min(xList)) * 300 + d3.quantile(xList,0.15);
-    data[i].y = ( data[i].y - d3.min(yList) ) / (d3.max(yList) - d3.min(yList)) * 1000 + d3.quantile(yList,0.15);
+    data[i].x = ( data[i].x - d3.min(xList) ) / (d3.max(xList) - d3.min(xList)) * (tsne_width - d3.quantile(xList,0.15));
+    data[i].y = ( data[i].y - d3.min(yList) ) / (d3.max(yList) - d3.min(yList)) * (tsne_height - d3.quantile(yList,0.15));
   }
 }
 scaleData(dots,xList,yList);

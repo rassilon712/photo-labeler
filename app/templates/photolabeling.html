@@ -22,13 +22,13 @@
     <div class="row" style = "width: auto;">
      
         <!-- TSNE SELECTOR -->
-    <div id="tsne_div" class= "col-sm-3" style= "width: 350px; height: 1017px">
+    <div id="tsne_div" class= "col-sm-3" style= "width: 350px; height: 500px">
     </div>
     <div class="col-sm-12" style="width: auto; height: auto;">
-      <div style="width: 100%; height:auto; min-height:511px; display: inline-block;">
+      <div style="width: 100%; height:auto; min-height:308px; display: inline-block;">
        <!-- ADJ1 -->
         <!-- 286 / 53 -->
-        <div class=left1 style="width: 579px; height: auto; min-height: 503px; margin:10px">
+        <!-- <div class=left1 style="width: 579px; height: auto; min-height: 503px; margin:10px">
           <div class =adjective id ="adjective1" style= "text-align: left">
             <p>more likely <span class = "keyword"></span></p>
           </div>
@@ -52,43 +52,42 @@
               <div class="left" id = "L12"></div>
             </div>
           </div>
-          </div>
+          </div> -->
           <!-- NEUTRAL -->
           <!-- 152 / 53 -->
-          <div class = left1 style="width: 579px; height: auto; min-height: 503px; margin:10px">
-            <div class =adjective style= "text-align: center">
-              NEUTRAL 
+          <div class = left1 style="width: 864px; height: auto; min-height: 344px; margin:10px">
+            <div class =adjective style= "text-align: center; margin: 10px">
+              <b>Select every profile you think "attracive" and confirm <br>
+              Note: profiles not selected are deemed to be "unattractive"</b>
             </div>
-            <div class="red-blue neutral" id = "style-3" column="neutral" stlye = "overflow:hidden">
+            <div class="red-blue neutral" id = "style-3" column="neutral" stlye = "overflow:hidden; height:auto; min-height:344px">
                 <div class = "image_row" style = "height: 146.7px;">
                   <div class="center" id = "N1"></div>
                   <div class="center" id = "N2"></div>
                   <div class="center" id = "N3"></div>
                   <div class="center" id = "N4"></div>
-                </div>
-                <div class = "image_row" style = "height: 146.7px;">
                   <div class="center" id = "N5"></div>
                   <div class="center" id = "N6"></div>
-                  <div class="center" id = "N7"></div>
-                  <div class="center" id = "N8"></div>
                 </div>
                 <div class = "image_row" style = "height: 146.7px;">
+                  <div class="center" id = "N7"></div>
+                  <div class="center" id = "N8"></div>
                   <div class="center" id = "N9"></div>
                   <div class="center" id = "N10"></div>
                   <div class="center" id = "N11"></div>
                   <div class="center" id = "N12"></div>
                 </div>
                 <!-- <div class = "image_row" style = "height: 146.7px;">
-                  <div class="center" id = "N13"></div>
-                  <div class="center" id = "N14"></div>
-                  <div class="center" id = "N15"></div>
-                  <div class="center" id = "N16"></div>
+                  <div class="center" id = "N9"></div>
+                  <div class="center" id = "N10"></div>
+                  <div class="center" id = "N11"></div>
+                  <div class="center" id = "N12"></div>
                 </div> -->
             </div>
           </div>
           <!-- ADJ2 -->
           <!-- 286 / 53 -->
-          <div class= left1 style="margin:10px">
+          <!-- <div class= left1 style="margin:10px">
             <div class =adjective id ="adjective2" style= "text-align: right">
               <p>more likely not <span class = "keyword"></span></p>
             </div>
@@ -112,36 +111,36 @@
                   <div class="right" id = "R1"></div>
                 </div>
             </div>
-          </div>
+          </div> -->
         
         </div>
 
         <!-- Your History -->
-        <div class="row" style = "width: auto;">
-            <div class=left1 style="width: 579px; height: 300px; margin-left:22px;">
-              <div class =adjective style= "font-size: 30px; height: 10%;text-align: left">
-                <p>Positive Attribute History</p>
-              </div>
-              <div class =bar_positive style= "width: 100%; height: 90%; text-align: left; background-color: rgba(65,122,255,0.05)">
+          <!-- <div class="row" style = "width: auto;">
+              <div class=left1 style="width: 579px; height: 300px; margin-left:22px;">
+                <div class =adjective style= "font-size: 30px; height: 10%;text-align: left">
+                  <p>Positive Attribute History</p>
+                </div>
+                <div class =bar_positive style= "width: 100%; height: 90%; text-align: left; background-color: rgba(65,122,255,0.05)">
+              </div> 
             </div> 
-          </div> 
-            <div class = left1 style="width: 579px; height: auto; margin:10px">
-              <div class =adjective style= "font-size: 30px;height: 10%; text-align: center"> </div>
-              <div class =bar_neutral style= "width: 100%; height: 90%; text-align: center">
+              <div class = left1 style="width: 579px; height: auto; margin:10px">
+                <div class =adjective style= "font-size: 30px;height: 10%; text-align: center"> </div>
+                <div class =bar_neutral style= "width: 100%; height: 90%; text-align: center">
+                </div>
               </div>
-            </div>
 
-            <div class= left1 style="width: 579px; height: 300px;">
-              <div class =adjective style= "font-size: 30px;height: 10%; text-align: right">
-                <p>Negative Attribute History</p>
-              </div>
-              <div class =bar_negative style= "width: 100%; height: 90%; text-align: right; background-color: rgba(242,108,108,0.05)">
-              </div>
-          </div>
-      </div>
+              <div class= left1 style="width: 579px; height: 300px;">
+                <div class =adjective style= "font-size: 30px;height: 10%; text-align: right">
+                  <p>Negative Attribute History</p>
+                </div>
+                <div class =bar_negative style= "width: 100%; height: 90%; text-align: right; background-color: rgba(242,108,108,0.05)">
+                </div>
+            </div>
+        </div> -->
       
                 <!-- Description -->
-                <div class=description id = "description0" style="text-align: left"><span class="count"></span>/<span class="total"></span></div>
+                <!-- <div class=description id = "description0" style="text-align: left"><span class="count"></span>/<span class="total"></span></div>
                 <div class=description id = "description1">
                   Please review the images above in a way that the images are placed in the right category.
                 </div>
@@ -153,14 +152,14 @@
                 <p>You can choose multiple images by clicking with 'control' button pressed.</p>
                 You can also move the images using your keyboard. A: <span class="keyword"></span>, D: not <span class="keyword"></span>, W: Neutral, S: Confirm
                 <h4></b>
-                </div>
+                </div> -->
                   <!-- Buttons -->
                   <div style="width: 100%; text-align: center; margin: 10px">
                       <button class= "button-confirm" onclick="confirm_click();">
                           CONFIRM
                       </button>
-                      <!-- <button class= "button-logout" onclick= "location.href='http://127.0.0.1:5000/logout';"> -->
-                      <button class= "button-logout" onclick= "location.href='http://130.211.240.166:5000/logout';">
+                      <button class= "button-logout" onclick= "location.href='http://127.0.0.1:5000/logout';">
+                      <!-- <button class= "button-logout" onclick= "location.href='http://130.211.240.166:5000/logout';"> -->
                         LOGOUT
                       </button>
                   </div>

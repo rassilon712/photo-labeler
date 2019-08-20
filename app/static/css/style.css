@@ -4,7 +4,7 @@ body{
 .red-blue{
   width: 579px;
   height: auto;
-  min-height: 440px;
+  min-height: 114.7px;
   border: inset;
   border-color: #707070;
   border-width: 1px;
@@ -58,14 +58,14 @@ div.block {
 }
 
 
-.history-red-blue{
+/* .history-red-blue{
   width: 579px;
   height: 300px;
   margin: 0px;
   border: inset;
   border-color: #707070;
   border-width: 1px;
-}
+} */
 
 
 .image_row{
@@ -75,8 +75,9 @@ div.block {
 .description{
   width: 100%; 
   text-align: center; 
+  font-size : 20px;
   font-family: Merriweather-Bold, Merriweather; 
-  font-weight:300
+  font-weight:500
 }
 .tsne{
   height: 440px; 
@@ -94,6 +95,7 @@ div.block {
   border: solid; 
 }
 .neutral{
+  width : 864px;
   border: inset;
   border-color: #707070;
   border-width: 1px;
@@ -108,12 +110,12 @@ div.block {
   border-width: 1px;        
 }
 .adjective{
-  height: 53px;
-  font-size:40px;
-  font-family: RobotoCondensed-Light, Roboto;
-  font-weight: 300; 
-  color: #707070; 
-  border-width: 1px;
+  
+  width: 100%; 
+  text-align: center; 
+  font-size : 17px;
+  font-family: Merriweather-Bold, Merriweather; 
+  font-weight:500
 }
 .grids {
   height: 440px; 
@@ -132,7 +134,7 @@ div.left1{
 }
 div.center{        
   float: left;
-  width: 25%;
+  width: 16.66%;
   height: 100%;
   position: relative;
 }

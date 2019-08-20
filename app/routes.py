@@ -23,29 +23,29 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# client = pymongo.MongoClient('mongodb://localhost:27017/')
-client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+client = pymongo.MongoClient('mongodb://localhost:27017/')
+# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
 #-------------------------------Parameter---------------------------------------------------
-CONST_BLUE_NUMBER = 6
-CONST_RED_NUMBER = 6
-CONST_NEUTRAL_NUMBER= 2
+CONST_BLUE_NUMBER = 0
+CONST_RED_NUMBER = 0
+CONST_NEUTRAL_NUMBER= 12
 CONST_RANDOM_BLUE_NUMBER = 0
 CONST_RANDOM_RED_NUMBER = 0
-CONST_RANDOM_NEUTRAL_NUMBER= 14
+CONST_RANDOM_NEUTRAL_NUMBER= 12
 
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
-# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
-CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
+CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
+# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
 CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
 CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
 CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
-CONST_SAMPLING_MODE = "RANDOM"
+CONST_SAMPLING_MODE = "CLUSTER"
 
 #--------------------------------------------------------------------------------------------
 
@@ -274,14 +274,15 @@ collist = db.list_collection_names()
 if "images" in collist:
     print("check")
     db.images.drop()
-if "user" in collist:
-    db.user.drop()
 
-collection_user = db.user
-
-collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False, 'time': 0}, {'_id':'user101','pwd':'davian101','isDone':False, 'time': 0},{'_id':'user1','pwd':'davian','isDone':False, 'time': 0},
+if "user" not in collist:
+    collection_user = db.user
+    collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False, 'time': 0}, {'_id':'user101','pwd':'davian101','isDone':False, 'time': 0},{'_id':'user1','pwd':'davian','isDone':False, 'time': 0},
     {'_id':'user2','pwd':'davian','isDone':False, 'time': 0},{'_id':'user3','pwd':'davian','isDone':False, 'time': 0},{'_id':'user4','pwd':'davian','isDone':False, 'time': 0},{'_id':'user5','pwd':'davian','isDone':False, 'time': 0},
     {'_id':'user6','pwd':'davian','isDone':False, 'time': 0},{'_id':'user7','pwd':'davian','isDone':False, 'time': 0},{'_id':'user8','pwd':'davian','isDone':False, 'time': 0}])
+
+
+collection_user = db.user
 collection_image = db.images
 collection_log = db.log
 collection_current = db.Current_toLabel
@@ -289,6 +290,7 @@ collection_before = db.Before_toLabel
 
 total_image_list = sorted(os.listdir(os.path.join(APP_ROOT,CONST_IMAGE_PATH)))[0:1000]
 total_num = len(total_image_list)
+print(total_num)
 
 collection_image.insert([{"image_id" : total_image_list[i], "image_index" : i} for i in range(len(total_image_list))])
 
@@ -401,6 +403,7 @@ def getLog():
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
         data_list['user_id'] = session.get('user_id')
+        collection_log.insert(data_list)
         return jsonify("good")
         
 @app.route('/getAttribute', methods = ['GET','POST'])
@@ -536,8 +539,19 @@ def getData():
             item['user_id'] = user_id
 
         collection_log.insert({"Time":time,"user_id": user_id, "What":"confirm"})
+        
         if data_list:
-            collection_labeled.insert(data_list)
+            for item in data_list:
+                check = list(collection_labeled.find({"user_id": item["user_id"], "adjective": item["adjective"], "image_id": item['image_id']}))
+                if check:
+                    collection_labeled.update({"user_id": item["user_id"], "adjective": item["adjective"], "image_id": item['image_id']}, 
+                                            {'$set': {"user_id": item["user_id"],"cluster": item["cluster"], "image_id": item['image_id']
+                                                        , "adjective": item["adjective"], "label":item["label"], "time":item['time']}})
+                    print("updated!")
+                else:
+                    collection_labeled.insert(item)
+                    print("inserted!")
+            # collection_labeled.insert(data_list)
 
         keyword_index = collection_current.find({"user_id": user_id})[0]['adjective']
         
