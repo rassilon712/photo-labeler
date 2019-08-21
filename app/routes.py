@@ -9,9 +9,11 @@ import time
 import random
 import copy
 from collections import Counter, OrderedDict
-
+import ctypes
 from datetime import datetime
 import csv
+from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV
 
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.manifold import TSNE
@@ -23,8 +25,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-client = pymongo.MongoClient('mongodb://localhost:27017/')
-# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+# client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -290,7 +292,7 @@ collection_before = db.Before_toLabel
 
 total_image_list = sorted(os.listdir(os.path.join(APP_ROOT,CONST_IMAGE_PATH)))[0:1000]
 total_num = len(total_image_list)
-print(total_num)
+# print(total_num)
 
 collection_image.insert([{"image_id" : total_image_list[i], "image_index" : i} for i in range(len(total_image_list))])
 
@@ -303,15 +305,22 @@ features2 = read_pck(CONST_PRETRAINED_FEATURE2)[0]
 
 features1.update(features2)
 
+with open('./ffhq600_facenet_vggface1.pkl', 'rb') as f:
+    total_dict = pickle.load(f)
+with open('./ffhq600_facenet_vggface2.pkl', 'rb') as f:
+    dict2 = pickle.load(f)
+total_dict.update(dict2)
+
+
 features = {}
-print(sorted(features1.keys()))
+# print(sorted(features1.keys()))
 for key in sorted(features1.keys()):
     if not key in features:    # Depending on the goal, this line may not be neccessary
         features[key] = features1[key]
         if len(features.keys()) == 1000:
             break
-print(len(total_image_list))
-print(features.keys(), len(features.keys()))
+# print(len(total_image_list))
+# print(features.keys(), len(features.keys()))
 
 
 
@@ -323,7 +332,7 @@ for key in sorted(attr_list_temp.keys()):
         if len(attr_list.keys()) == 1000:
             break
 
-print(len(attr_list.keys()))
+# print(len(attr_list.keys()))
 
 for each_key in sorted(attr_list):
     attr_list2.append(attr_list[each_key])
@@ -510,7 +519,10 @@ def getCurrent():
 
 @app.route('/getData', methods = ['GET','POST'])
 def getData():
+    # cumulative_result = {}
+    # cumulative_data = []
     user_id = session.get("user_id")
+    # cumulative_result['user_id'] = user_id
     check_time = collection_user.find({'_id':user_id})[0]['time']
     print('check_time', check_time)
     #data 추가하는 것 try except 문으로 또 걸어주기 (id, pwd)까지
@@ -527,6 +539,45 @@ def getData():
         json_received = request.form
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
+
+        # 현재까지 한 user가 labeling 한 list (positive 혹은 negative)
+        positive_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {'label': 1}]})]
+        negative_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {"$or": [{'label':0} , {'label':-1}]}]})]
+
+        # image_id만 따로 뽑은 list
+        positive_image_id_list = [item['image_id'] for item in positive_label]
+        negative_image_id_list = [item['image_id'] for item in negative_label]
+
+        # dictionary로 image_id랑 facial vector 연결
+        positive_feature_vector = {}
+        for image_id in positive_image_id_list:
+            positive_feature_vector[image_id] = total_dict[image_id]
+        negative_feature_vector = {}
+        for image_id in negative_image_id_list:
+            negative_feature_vector[image_id] = total_dict[image_id]
+
+        # SVM에 들어갈 X,y 만듦 positive negative 섞음
+        df_list = list(positive_feature_vector.values())
+        X1 = np.array(df_list)
+        Y1 = np.ones(X1.shape[0])
+        df_list = list(negative_feature_vector.values())
+        X2 = np.array(df_list)
+        Y2 = np.zeros(X2.shape[0])
+        X = np.concatenate((X1,X2), axis =0)
+        y = np.concatenate((Y1,Y2), axis =0)
+
+        classifier = SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
+            decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',
+            max_iter=-1, probability=True, random_state=None, shrinking=True,
+            tol=0.001, verbose=False)
+        # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0) -> 무시해도 됨
+        classifier.fit(X, y)
+
+        # <todo>
+        # 여기서부터 predict 들어가야함 뒤 배치에 있는 unlabeled data를 예측해야함
+        # result = classifier.predict_proba(X_test) -> 이 predict_prob을 높은 순서대로 다음 배치에서 보여주면 됨 
+
+
         before_time = collection_user.find({'_id':user_id})[0]['time']
         add_time = int(data_list[0]['time'])
         final_time = before_time + add_time
@@ -844,3 +895,28 @@ def index():
         return redirect(url_for('logIn'))
 
 
+
+
+
+
+
+
+
+
+
+
+
+        # classifier3 = ("./practice3.py positive_label negative_label")
+        # classifier1 = ("./practice1.py positive_label negative_label")
+        # classifier2 = ("./practice2.py positive_label negative_label")
+        # os.system("start cmd.exe @cmd @echo off /c python practice1.py")
+        # if data_list[0]['batch_index'] % 3 == 0:
+        #     os.system("start cmd.exe @cmd @echo off /c python practice3.py")
+        #     # ctypes.windll.shell32.ShellExecuteA(0,'open', classifier3, None, None, 1)
+        # elif data_list[0]['batch_index'] % 3 == 1:
+        #     os.system("start cmd.exe @cmd @echo off /c python practice1.py")
+        #     # ctypes.windll.shell32.ShellExecuteA(0,'open', classifier1, None, None, 1)
+        # elif data_list[0]['batch_index'] % 3 == 2:
+        #     os.system("start cmd.exe @cmd @echo off /c python practice2.py")
+            # ctypes.windll.shell32.ShellExecuteA(0,'open', classifier2, None, None, 1)
+        # print(data_list)

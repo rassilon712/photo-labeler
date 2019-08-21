@@ -18,7 +18,6 @@ confirm_button.disabled = false;
 
 let mouseOffset = {x:0, y:0};
 let isMouseDown = false;
-
 let currentTodo = null;
 let currentList = [];
 let tempTodo = null;
@@ -736,7 +735,7 @@ function classifyImages(){
     type: 'POST',
     data: {"jsonData" : outParam},
     dataType:'json',
-    success: function(data) {
+    success: function(data) {      
       //NUMBER_OF_ADJECTIVE만큼 실험을 안 했다면 화면 초기화(init)
       //NUMBER_OF_ADJECTIVE만큼 실험을 했다면 로그아웃 (이 때, user db의 isDone 필드가 True로 바뀌며 재접속 불가능)
       if(data['time'] > 900000){
@@ -834,11 +833,11 @@ function js_yyyy_mm_dd_hh_mm_ss () {
 function displayImages(queue){
   onLoadcount = 0;
   for(var i=1;i<=queue.length;i++){
+
     if(queue[i-1] != null){
       var img_node = document.createElement('img');
       img_node.setAttribute("class","todo-item");
       img_node.src = IMAGE_PATH + queue[i-1];
-
       var side = "";
 
       if(queue == blue_queue){
@@ -904,6 +903,13 @@ function displayImages(queue){
         timeStart = Date.now();
       }};
     }
+    if (count_num>1){
+        console.log($('.todo-item').length);
+        $('.todo-item').addClass('over');
+        // last_element = $('.todo-item').slice(-1)[0];
+        // last_element.setAttribute("class","todo-item over");      
+    }
+
   }
 
 
