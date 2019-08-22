@@ -905,9 +905,6 @@ function displayImages(queue){
     }
     if (count_num>1 && check_positive == true){
         $('.todo-item').addClass('over');
-        console.log('inside', check_positive);
-        // last_element = $('.todo-item').slice(-1)[0];
-        // last_element.setAttribute("class","todo-item over");      
     }
 
   }
