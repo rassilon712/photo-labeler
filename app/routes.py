@@ -542,7 +542,19 @@ def getData():
 
         # 현재까지 한 user가 labeling 한 list (positive 혹은 negative)
         positive_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {'label': 1}]})]
-        negative_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {"$or": [{'label':0} , {'label':-1}]}]})]
+        negative_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {'label':-1}]})]
+
+        #현재 labeling 한것을 추가
+        for item in data_list:
+            if item['label'] == 1 and item not in positive_label:
+                positive_label.append(item)
+            elif item['label'] == -1 and item not in negative_label:
+                negative_label.append(item)
+
+        # positive를 아예 안할경우 대비 
+        check_positive = False
+        if len(positive_label) > 0:
+            check_positive = True
 
         # image_id만 따로 뽑은 list
         positive_image_id_list = [item['image_id'] for item in positive_label]
@@ -563,21 +575,30 @@ def getData():
         df_list = list(negative_feature_vector.values())
         X2 = np.array(df_list)
         Y2 = np.zeros(X2.shape[0])
-        X = np.concatenate((X1,X2), axis =0)
-        y = np.concatenate((Y1,Y2), axis =0)
+        if len(X1) == 0:
+            X = X2
+            y = Y2
+        elif len(X2) == 0:
+            X = X1
+            y = Y1
+        else:
+            X = np.concatenate((X1,X2), axis =0)
+            y = np.concatenate((Y1,Y2), axis =0)
 
         classifier = SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
             decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',
             max_iter=-1, probability=True, random_state=None, shrinking=True,
             tol=0.001, verbose=False)
         # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0) -> 무시해도 됨
-        classifier.fit(X, y)
 
-        # <todo>
-        # 여기서부터 predict 들어가야함 뒤 배치에 있는 unlabeled data를 예측해야함
-        # result = classifier.predict_proba(X_test) -> 이 predict_prob을 높은 순서대로 다음 배치에서 보여주면 됨 
-
-
+        # 한쪽이 0일 경우 그냥 통과 아니면 SVM
+        if (len(X) == 0 and len (y) == 0) or check_positive == False:
+            pass
+        else:
+            classifier.fit(X, y)
+            # <todo>
+            # 여기서부터 predict 들어가야함 뒤 배치에 있는 unlabeled data를 예측해야함
+            # result = classifier.predict_proba(X_test) -> 이 predict_prob을 높은 순서대로 다음 배치에서 보여주면 됨 
         before_time = collection_user.find({'_id':user_id})[0]['time']
         add_time = int(data_list[0]['time'])
         final_time = before_time + add_time
@@ -789,7 +810,8 @@ def getData():
                     "current_cluster" : current_cluster,
                     "positive_attr_list" : attribute_score[0],
                     "negative_attr_list" : attribute_score[1],
-                    "time" : final_time})
+                    "time" : final_time,
+                    "check_positive" : check_positive})
 
     
 

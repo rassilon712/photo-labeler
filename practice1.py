@@ -58,12 +58,12 @@ for i in range(len(X_test)):
 		# else:
 		# 	print(X_test)
 # print(train_dict)
-print(len(X_test))
-print(len(train_dict.keys()))
-# print(classifier.score(X_test, y_test))  
-result = classifier.predict_proba(X_test)
-print(len(result))
-
+# print(len(X_test))
+# print(len(train_dict.keys()))
+result = classifier.score(X_test, y_test) 
+predict_list = classifier.predict_proba(X_test)
+print('prediction score: ', result)
+print('prediction list: ', predict_list)
 # df = pd.DataFrame(result, index= train_dict.keys())
 # print(df)
 # print(classifier.predict_proba(X_test))

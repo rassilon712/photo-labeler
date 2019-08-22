@@ -22,7 +22,7 @@ let currentTodo = null;
 let currentList = [];
 let tempTodo = null;
 let tempTodo_list = [];
-
+let check_positive = false;
 let ctrlPressed = false;
 let multiChoice = false;
 let totalDisplay = null;
@@ -903,9 +903,9 @@ function displayImages(queue){
         timeStart = Date.now();
       }};
     }
-    if (count_num>1){
-        console.log($('.todo-item').length);
+    if (count_num>1 && check_positive == true){
         $('.todo-item').addClass('over');
+        console.log('inside', check_positive);
         // last_element = $('.todo-item').slice(-1)[0];
         // last_element.setAttribute("class","todo-item over");      
     }
@@ -934,7 +934,9 @@ function init(data){
     sorted_negative_attr_list = negative_attr_list.sort(function(x, y){
       return d3.descending(x.score, y.score);
    });
-
+    checking  = data['check_positive'];
+    check_positive = checking;
+    console.log('first_positive', check_positive);
     var temp_dots = []
     for(x in dots)
     temp_dots.push(dots[x].image_id);
