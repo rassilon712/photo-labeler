@@ -405,6 +405,17 @@ def logout():
         collection_log.insert({"Time":time,"user_id": user_id, "What":"Logout"})
         return redirect(url_for('logIn'))
 
+# @app.route('/getLog', methods = ['GET','POST'])
+# def getLog():
+#     if request.method == "POST":
+#         json_received = request.form
+#         data = json_received.to_dict(flat=False)
+#         data_list = json.loads(data['jsonData'][0])
+#         data_list['user_id'] = session.get('user_id')
+#         collection_log.insert(data_list)
+#         return jsonify("good")
+
+        
 @app.route('/getLog', methods = ['GET','POST'])
 def getLog():
     if request.method == "POST":
