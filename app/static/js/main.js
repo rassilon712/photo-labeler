@@ -1010,8 +1010,8 @@ tsne_svg1.append('rect')
 
 // legend 정의
 var legend = tsne_svg1.selectAll(".legend")
-                 .data([{text:'Positive', color:'#F26C6C', border:"transparent"},
-                       {text:'Negative', color:"#417AFF", border:"transparent"},
+                 .data([{text:'Positive', color:"#417AFF", border:"transparent"},
+                       {text:'Negative', color:'#F26C6C', border:"transparent"},
                       {text: 'Not labeled', color:'#AAAAAA', border:"transparent"},
                       {text: 'Current Image', color:'#FFFFFF', border:"#FF0000"}])
                  .enter().append("g")
