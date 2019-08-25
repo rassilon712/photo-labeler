@@ -882,7 +882,6 @@ def index():
         
         user_id = session.get("user_id")
         db_image_list = [item['image_id'] for item in collection_image.find()]
-        
         todo_images = [item for item in collection_current.find({"user_id" : user_id})]
         if todo_images:
             print("old")
