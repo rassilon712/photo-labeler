@@ -285,7 +285,6 @@ if "user" not in collist:
 
 
 collection_user = db.user
-collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False, 'time': 0}, {'_id':'user3','pwd':'davian','isDone':False, 'time': 0}])
 collection_image = db.images
 collection_log = db.log
 collection_current = db.Current_toLabel
