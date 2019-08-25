@@ -25,8 +25,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-client = pymongo.MongoClient('mongodb://localhost:27017/')
-# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+# client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -40,14 +40,14 @@ CONST_RANDOM_NEUTRAL_NUMBER= 12
 
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
-CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
-# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
+# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
+CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
 CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
 CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
 CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
-CONST_SAMPLING_MODE = "CLUSTER"
+CONST_SAMPLING_MODE = "PREDICT"
 
 #--------------------------------------------------------------------------------------------
 
@@ -405,6 +405,17 @@ def logout():
         collection_log.insert({"Time":time,"user_id": user_id, "What":"Logout"})
         return redirect(url_for('logIn'))
 
+# @app.route('/getLog', methods = ['GET','POST'])
+# def getLog():
+#     if request.method == "POST":
+#         json_received = request.form
+#         data = json_received.to_dict(flat=False)
+#         data_list = json.loads(data['jsonData'][0])
+#         data_list['user_id'] = session.get('user_id')
+#         collection_log.insert(data_list)
+#         return jsonify("good")
+
+        
 @app.route('/getLog', methods = ['GET','POST'])
 def getLog():
     if request.method == "POST":
@@ -539,10 +550,14 @@ def getData():
         json_received = request.form
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
+        
+        keyword_index = collection_current.find({"user_id": user_id})[0]['adjective']
+        print("keyword_index", keyword_index)
+        
 
         # 현재까지 한 user가 labeling 한 list (positive 혹은 negative)
-        positive_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {'label': 1}]})]
-        negative_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {'label':-1}]})]
+        positive_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {'label': 1}, {"adjective" : CONST_ADJECTIVE[keyword_index]}]})]
+        negative_label = [item for item in collection_labeled.find({"$and": [{'user_id':user_id}, {'label':-1}, {"adjective" : CONST_ADJECTIVE[keyword_index]}]})]
 
         #현재 labeling 한것을 추가
         for item in data_list:
@@ -592,13 +607,14 @@ def getData():
         # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0) -> 무시해도 됨
 
         # 한쪽이 0일 경우 그냥 통과 아니면 SVM
+
+        isFitted = False
         if (len(X) == 0 and len (y) == 0) or check_positive == False:
             pass
         else:
+            isFitted = True
             classifier.fit(X, y)
-            # <todo>
-            # 여기서부터 predict 들어가야함 뒤 배치에 있는 unlabeled data를 예측해야함
-            # result = classifier.predict_proba(X_test) -> 이 predict_prob을 높은 순서대로 다음 배치에서 보여주면 됨 
+            
         before_time = collection_user.find({'_id':user_id})[0]['time']
         add_time = int(data_list[0]['time'])
         final_time = before_time + add_time
@@ -633,6 +649,7 @@ def getData():
         prelabeled_image_list = [item['image_id'] for item in collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]})]        
         possible_images = sorted(list(set(db_image_list) - set(prelabeled_image_list)))
 
+
         if not possible_images:
             if CONST_SAMPLING_MODE == "CLUSTER":
                 blue_number = CONST_BLUE_NUMBER
@@ -658,7 +675,8 @@ def getData():
                                 if len(batch_list) == CONST_BATCH_NUMBER:
                                     print("false")
                                     isnotFull = False        
-            else:
+
+            elif CONST_SAMPLING_MODE == "RANDOM":
                 blue_number = CONST_RANDOM_BLUE_NUMBER
                 red_number = CONST_RANDOM_RED_NUMBER
                 neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
@@ -671,7 +689,26 @@ def getData():
                 possible_temp = copy.deepcopy(possible_images)
                 print(len(possible_temp))
                 feature_temp = copy.deepcopy(feature_list)
-                            
+                
+
+                appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
+                batch_list = neutral_list
+
+            elif CONST_SAMPLING_MODE == "PREDICT":
+                blue_number = CONST_RANDOM_BLUE_NUMBER
+                red_number = CONST_RANDOM_RED_NUMBER
+                neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
+                isNewset = True
+                keyword_index = keyword_index + 1
+                db_image_list = [item['image_id'] for item in collection_image.find()]
+                prelabeled_image_list = [item['image_id'] for item in collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]})]        
+                possible_images = sorted(list(set(db_image_list) - set(prelabeled_image_list)))
+                
+                possible_temp = copy.deepcopy(possible_images)
+                print(len(possible_temp))
+                feature_temp = copy.deepcopy(feature_list)
+                
+
                 appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
                 batch_list = neutral_list
 
@@ -720,6 +757,21 @@ def getData():
 
                 batch_list = neutral_list
 
+            elif CONST_SAMPLING_MODE == "PREDICT":
+                
+                if isFitted:
+                    y_test = np.array(classifier.predict_proba(feature_temp)[:,1])    
+                    sort_ret = np.argsort(y_test)[::-1][0:CONST_BATCH_NUMBER]
+                else:
+                    sort_ret = random.sample(range(len(possible_temp)),CONST_RANDOM_NEUTRAL_NUMBER)
+
+                appendImage(neutral_list, possible_temp, feature_temp, sort_ret)
+                blue_number = CONST_RANDOM_BLUE_NUMBER
+                red_number = CONST_RANDOM_RED_NUMBER
+                neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
+
+                batch_list = neutral_list
+
             elif CONST_SAMPLING_MODE == "CLUSTER":
                 
                 blue_number = CONST_BLUE_NUMBER
@@ -761,6 +813,7 @@ def getData():
 
                             else:                        
                                 print(len(item['image_id_list']))
+
                                 batch_list.append(item['image_id_list'].pop())
                                 if len(batch_list) == CONST_BATCH_NUMBER:
                                     print("false")
@@ -769,6 +822,7 @@ def getData():
 
 
         current_todo = batch_list
+            
 
         labeled = [total_image_list.index(item['image_id']) for item in data_list]
         current_cluster_index = [total_image_list.index(item) for item in current_todo]
@@ -838,6 +892,9 @@ def index():
         else:
             print("new")
             if CONST_SAMPLING_MODE == "RANDOM":
+                batch_list = [total_image_list[item] for item in random.sample(range(len(total_image_list)),CONST_BATCH_NUMBER)]
+            
+            elif CONST_SAMPLING_MODE == "PREDICT":
                 batch_list = [total_image_list[item] for item in random.sample(range(len(total_image_list)),CONST_BATCH_NUMBER)]
 
             elif CONST_SAMPLING_MODE == "CLUSTER":
