@@ -26,11 +26,19 @@ negative_image_id_list = [item['image_id'] for item in negative_label]
 
 positive_feature_vector = {}
 for image_id in positive_image_id_list:
-	positive_feature_vector[image_id] = total_dict[image_id]
+	positive_feature_vector[image_id] = (total_dict[image_id], 1)
 
 negative_feature_vector = {}
 for image_id in negative_image_id_list:
-	negative_feature_vector[image_id] = total_dict[image_id]
+	negative_feature_vector[image_id] = (total_dict[image_id], -1)
+
+# final_dict = {}
+# final_dict.update(positive_feature_vector)
+# final_dict.update(negative_feature_vector)
+
+# print(len(final_dict))
+# with open('feature_label.pickle', 'wb') as f:
+# 	pickle.dump(final_dict, f)
 
 df_list = list(positive_feature_vector.values())
 X1 = np.array(df_list)
@@ -64,7 +72,7 @@ result = classifier.score(X_test, y_test)
 predict_list = classifier.predict_proba(X_test)
 print('prediction score: ', result)
 print('prediction list: ', predict_list)
-# df = pd.DataFrame(result, index= train_dict.keys())
-# print(df)
-# print(classifier.predict_proba(X_test))
-# print(type(result))
+df = pd.DataFrame(result, index= train_dict.keys())
+print(df)
+print(classifier.predict_proba(X_test))
+print(type(result))
