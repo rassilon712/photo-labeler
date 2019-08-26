@@ -3,8 +3,8 @@ const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 const BATCH_NUMBER = 12;
-const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
-// const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
+// const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
+const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
 // const SAMPLING_MODE = "RANDOM";
 
 /* Tool 기능 관련 변수들 */
@@ -742,8 +742,8 @@ function confirm_click(){
 
 //logout 누름
 function logout_click(){
-  // window.location = "http://130.211.240.166:5000/logout";
-  window.location.href = "http://127.0.0.1:5000/logout";
+  window.location = "http://130.211.240.166:5000/logout";
+  // window.location.href = "http://127.0.0.1:5000/logout";
 }  
 
 function classifyImages(){
@@ -788,16 +788,16 @@ function classifyImages(){
       //NUMBER_OF_ADJECTIVE만큼 실험을 안 했다면 화면 초기화(init)
       //NUMBER_OF_ADJECTIVE만큼 실험을 했다면 로그아웃 (이 때, user db의 isDone 필드가 True로 바뀌며 재접속 불가능)
       if(data['time'] > 900000){
-        window.location = "http://127.0.0.1:5000/logIn";
-        // window.location = "http://130.211.240.166:5000/logIn";
+        // window.location = "http://127.0.0.1:5000/logIn";
+        window.location = "http://130.211.240.166:5000/logIn";
 
       }
       if(data['index'] < NUMBER_OF_ADJECTIVE){
         init(data);
       }
       else{
-        window.location = "http://127.0.0.1:5000/logIn";
-        // window.location = "http://130.211.240.166:5000/logIn";
+        // window.location = "http://127.0.0.1:5000/logIn";
+        window.location = "http://130.211.240.166:5000/logIn";
       }
     },
     error: function(x, e) {
@@ -1158,7 +1158,7 @@ dot = tsne_container.append("g")
       tsne_img
       .append('img')
       .transition().duration(500)
-      .attr('src','static/image/FFHQ_SAMPLE2/'+d.image_id)
+      .attr('src',IMAGE_PATH+d.image_id)
       .attr('width',100)
       .attr('height',100);
     })

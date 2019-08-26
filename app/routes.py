@@ -25,8 +25,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-client = pymongo.MongoClient('mongodb://localhost:27017/')
-# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+# client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -40,8 +40,8 @@ CONST_RANDOM_NEUTRAL_NUMBER= 12
 
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
-CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
-# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
+# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
+CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
 CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
 CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
 CONST_CLUSTER_NUMBER = 200
@@ -300,13 +300,14 @@ def calculateAttribute(user_id, keyword_index):
     total_attribute = positive_attribute + negative_attribute
     
     for item in dict(positive_attribute):
-        if total_attribute[item] < 10:
+        if total_attribute[item] < 10 or item == 'Attractive' or item == '5_o_Clock_Shadow':
+            
             positive_attribute.pop(item, None)
         else:
             positive_attribute[item] /= total_attribute[item] 
         
     for item in dict(negative_attribute):
-        if total_attribute[item] < 10:
+        if total_attribute[item] < 10 or item == 'Attractive' or item == '5_o_Clock_Shadow':
             negative_attribute.pop(item, None)
         else:
             negative_attribute[item] /= total_attribute[item]
