@@ -1,4 +1,3 @@
-/* 패러미터 */
 const NUMBER_OF_ADJECTIVE = 3;
 const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
@@ -22,7 +21,6 @@ let currentTodo = null;
 let currentList = [];
 let tempTodo = null;
 let tempTodo_list = [];
-let check_positive = false;
 let ctrlPressed = false;
 let multiChoice = false;
 let totalDisplay = null;
@@ -542,6 +540,10 @@ function onMouseOver  (e, item) {
 function onMouseOut(e, item) {
   if(!isMouseDown){
     item.style.filter = "brightness(100%)";
+
+  if(typeof $(".attr_on").attr("class") != "undefined"){
+    $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
+  }
   }
 }
 
@@ -746,10 +748,6 @@ function logout_click(){
 
 function classifyImages(){
 
-  // if(typeof $(".attr_on").attr("class") != "undefined"){
-  //   $(".attr_on").attr("class", $(".attr_on").attr("class").replace(" attr_on",""));
-  // }
-
   // 배치된 image를 jarray형식으로 백엔드(/getData)로 전송
   let todo_list = document.getElementsByClassName("row")[0].getElementsByClassName("todo-item");
   let Jarray = new Array();
@@ -923,6 +921,7 @@ function displayImages(queue){
           classname = "center";
         }
         console.log(container);
+
         let row_count = container.getElementsByClassName('image_row')[0].childElementCount;
         console.log(row_count);
         new_row = document.createElement('div');
@@ -954,9 +953,6 @@ function displayImages(queue){
         timeStart = Date.now();
       }};
     }
-    if (count_num>1 && check_positive == true){
-        $('.todo-item').addClass('over');
-    }
 
   }
 
@@ -982,9 +978,7 @@ function init(data){
     sorted_negative_attr_list = negative_attr_list.sort(function(x, y){
       return d3.descending(x.score, y.score);
    });
-    checking  = data['check_positive'];
-    check_positive = checking;
-    console.log('first_positive', check_positive);
+    
     var temp_dots = []
     for(x in dots)
     temp_dots.push(dots[x].image_id);
@@ -1013,11 +1007,9 @@ function init(data){
 
   totalDisplay = blue_queue.length + neutral_queue.length + red_queue.length;
 
-
-
-  displayImages(blue_queue);
-  displayImages(red_queue);
+  
   displayImages(neutral_queue);
+
   todoItems = document.getElementsByClassName("todo-item");
   setListeners(todoItems);
 }
@@ -1026,11 +1018,11 @@ function init(data){
 
 var margin = { top: 0, right: 30, bottom: 0, left: 0},
 tsne_width = 350;
-tsne_height = 480;
+tsne_height = 600;
 var tsne_svg = d3.select("#tsne_div")
           .append("svg")
           .attr("width", 330 + "px")
-          .attr("height",  480 + "px")
+          .attr("height",  tsne_height + "px")
           .style("border","none") 
           .style("background-color", "none")
           .call(d3.zoom()
@@ -1038,7 +1030,7 @@ var tsne_svg = d3.select("#tsne_div")
           tsne_svg.attr("transform", d3.event.transform)
                  })
                  .scaleExtent([1,4])
-                 .translateExtent([[0,0],[350,480]])
+                 .translateExtent([[0,0],[350,tsne_height]])
             )
           .append("g");
 
@@ -1238,7 +1230,6 @@ function drawBar(positive_data, negative_data){
   else{
     axisscale = 1;
   }
-  console.log(axisscale);
   xRange1.domain([0,axisscale]);
   xRange2.domain([axisscale,0]);
   bar_svg1.select(".x")
@@ -1344,6 +1335,26 @@ function update(svg,data,scale, blueOrred){
     scoreClass = "red_score";
   }
 
+  var text_attribute = svg.selectAll("text.attribute").data(sorted_data);
+  text_attribute.enter().append("text").attr("class","attribute")
+                .attr("x", nodePos + 5)
+                .attr("y", function(d, i) { return 75 + i*40})
+                .attr("dy", ".35em")
+                .attr("font-size",13)
+                .text(function(d) { return d.attribute});
+
+  text_attribute
+                        .attr("x", nodePos + 5)
+                        .attr("y", function(d, i) { return 75 + i*40})
+                        .attr("dy", ".35em")
+                        .attr("font-size",13)
+                        .text(function(d) { return d.attribute});
+
+  var blue_rect_bar = svg.selectAll('rect.blue_bar').data(sorted_data);
+  var red_rect_bar = svg.selectAll('rect.red_bar').data(sorted_data);
+if(blueOrred == "blue"){
+
+
   var rect_nodes = svg.selectAll('rect.node').data(sorted_data);
   rect_nodes.enter().append("rect").attr("class","node")
                     .attr("id",function(d){ return d.attribute})
@@ -1370,6 +1381,7 @@ function update(svg,data,scale, blueOrred){
                         jObject.label = "negative";
                       }
                       jObject.type = "attribute";
+                      console.log(d.attribute);
                       $.ajax({
                         url : "/getCurrent",
                         type: 'POST',
@@ -1391,24 +1403,6 @@ function update(svg,data,scale, blueOrred){
         .attr("width", rect_width-5)
         .attr("height", 30);
 
-  var text_attribute = svg.selectAll("text.attribute").data(sorted_data);
-  text_attribute.enter().append("text").attr("class","attribute")
-                .attr("x", nodePos + 5)
-                .attr("y", function(d, i) { return 75 + i*40})
-                .attr("dy", ".35em")
-                .attr("font-size",13)
-                .text(function(d) { return d.attribute});
-
-  text_attribute
-                        .attr("x", nodePos + 5)
-                        .attr("y", function(d, i) { return 75 + i*40})
-                        .attr("dy", ".35em")
-                        .attr("font-size",13)
-                        .text(function(d) { return d.attribute});
-
-  var blue_rect_bar = svg.selectAll('rect.blue_bar').data(sorted_data);
-  var red_rect_bar = svg.selectAll('rect.red_bar').data(sorted_data);
-if(blueOrred == "blue"){
 
   blue_rect_bar.enter().append("rect").attr("class","blue_bar")
                   .attr("x", 20)
@@ -1430,6 +1424,24 @@ if(blueOrred == "blue"){
   blue_rect_bar.exit().remove();
   }
   else{  
+
+    
+  var rect_nodes = svg.selectAll('rect.node').data(sorted_data);
+  rect_nodes.enter().append("rect").attr("class","node")
+                    .attr("id",function(d){ return d.attribute})
+                    .attr("x",nodePos)
+                    .attr("y",function(d, i){ return 60 + i*40})
+                    .attr("width", rect_width-5)
+                    .attr("height", 30); 
+
+  rect_nodes
+        .attr("id",function(d){ return d.attribute})
+        .attr("x",nodePos)
+        .attr("y",function(d, i){ return 60 + i*40})
+        .attr("width", rect_width-5)
+        .attr("height", 30);
+
+
   red_rect_bar.enter().append("rect").attr("class","red_bar")
                   .attr("x", function(d){ return xRange2(d.score);})
                   .attr("y", function(d, i) { return 62 +  i*40})
@@ -1481,4 +1493,5 @@ if(blueOrred == "blue"){
 init();
 currentLabeling(current_cluster);
 markLabel(dots);
+
 
