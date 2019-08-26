@@ -25,8 +25,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# client = pymongo.MongoClient('mongodb://localhost:27017/')
-client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+client = pymongo.MongoClient('mongodb://localhost:27017/')
+# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -40,8 +40,8 @@ CONST_RANDOM_NEUTRAL_NUMBER= 12
 
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
-# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
-CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
+CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
+# CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
 CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
 CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
 CONST_CLUSTER_NUMBER = 200
@@ -110,27 +110,77 @@ def get_similar_images(input_data,feature_np,start,number, option):
     # print("sort_ret", sort_ret)
     return sort_ret
 
-def get_attribute_images(attribute,attribute_list,start,number):
+def get_attribute_images(attribute, attribute_temp, feature_temp, start, number, keyword_index):
     ret = []
-    
-    for i in range(len(attribute_list)):
-        if attribute in attribute_list[i]:
-            ret.append(i)
-            print(attribute_list[i], attribute)            
-        if len(ret) >= number:
-            break
-    return ret
+    features = []
+    index = []
 
+    # 현재까지 한 user가 labeling 한 list (positive 혹은 negative)
+    positive_label = [item for item in collection_labeled.find({"$and": [{'user_id':session.get("user_id")}, {'label': 1}, {"adjective" : CONST_ADJECTIVE[keyword_index]}]})]
+    negative_label = [item for item in collection_labeled.find({"$and": [{'user_id':session.get("user_id")}, {'label':-1}, {"adjective" : CONST_ADJECTIVE[keyword_index]}]})]
 
-def get_not_attribute_images(attribute,attribute_list,start,number):
-    ret = []
+    # positive를 아예 안할경우 대비 
+    check_positive = False
+    if len(positive_label) > 0:
+        check_positive = True
+
+    # image_id만 따로 뽑은 list
+    positive_image_id_list = [item['image_id'] for item in positive_label]
+    negative_image_id_list = [item['image_id'] for item in negative_label]
+
+    # dictionary로 image_id랑 facial vector 연결
+    positive_feature_vector = {}
+    for image_id in positive_image_id_list:
+        positive_feature_vector[image_id] = total_dict[image_id]
+    negative_feature_vector = {}
+    for image_id in negative_image_id_list:
+        negative_feature_vector[image_id] = total_dict[image_id]
+
+    # SVM에 들어갈 X,y 만듦 positive negative 섞음
+    df_list = list(positive_feature_vector.values())
+    X1 = np.array(df_list)
+    Y1 = np.ones(X1.shape[0])
+    df_list = list(negative_feature_vector.values())
+    X2 = np.array(df_list)
+    Y2 = np.zeros(X2.shape[0])
+    if len(X1) == 0:
+        X = X2
+        y = Y2
+    elif len(X2) == 0:
+        X = X1
+        y = Y1
+    else:
+        X = np.concatenate((X1,X2), axis =0)
+        y = np.concatenate((Y1,Y2), axis =0)
+
+    classifier = SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
+        decision_function_shape='ovr', degree=3, gamma='auto', kernel='rbf',
+        max_iter=-1, probability=True, random_state=None, shrinking=True,
+        tol=0.001, verbose=False)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0) -> 무시해도 됨
+
+    # 한쪽이 0일 경우 그냥 통과 아니면 SVM
+
+    isFitted = False
+    if (len(X) == 0 and len (y) == 0) or check_positive == False:
+        pass
+    else:
+        isFitted = True
+        classifier.fit(X, y)
     
-    for i in range(len(attribute_list)):
-        if attribute not in attribute_list[i]:
-            ret.append(i)
-            print(attribute_list[i], attribute)            
-        if len(ret) >= number:
-            break
+    for i in range(len(attribute_temp)):
+        if attribute in attribute_temp[i]:
+            features.append(feature_temp[i])
+            index.append(i)
+    
+    
+    if isFitted:
+        y_test = np.array(classifier.predict_proba(features)[:,1])    
+        sort_ret = np.argsort(y_test)[::-1][0:number]
+    else:
+        sort_ret = random.sample(range(len(attribute_temp)),number)
+
+    ret = [index[item] for item in sort_ret]
     return ret
 
 def appendImage(toList,possible_temp,Feature, query_indexes):
@@ -324,6 +374,7 @@ for key in sorted(features1.keys()):
 # print(features.keys(), len(features.keys()))
 
 
+model_list = {}
 
 attr_list = {}
 attr_list_temp = read_pck('attr_list.pickle')[0]
@@ -333,7 +384,8 @@ for key in sorted(attr_list_temp.keys()):
         if len(attr_list.keys()) == 1000:
             break
 
-# print(len(attr_list.keys()))
+print(attr_list.keys())
+print(total_image_list)
 
 for each_key in sorted(attr_list):
     attr_list2.append(attr_list[each_key])
@@ -424,6 +476,7 @@ def getLog():
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
         data_list['user_id'] = session.get('user_id')
+        data_list['sampling'] = CONST_SAMPLING_MODE
         collection_log.insert(data_list)
         return jsonify("good")
         
@@ -433,8 +486,6 @@ def getAttribute():
         json_received = request.form
         data = json_received.to_dict(flat=False)
         data_list = json.loads(data['jsonData'][0])
-        print(data_list)
-        print(attr_list[data_list['image_id']])
         return jsonify({"attribute":attr_list[data_list['image_id']]})
         
 @app.route('/getCurrent', methods = ['GET','POST'])
@@ -476,34 +527,37 @@ def getCurrent():
         elif data['type'][0] == "attribute":
             possible_temp = copy.deepcopy(possible_images)
             attribute_temp = copy.deepcopy(attr_list2)
-           
+            feature_temp = copy.deepcopy(feature_list)
+
             attribute_removed = removeFeature(attribute_temp, prelabeled_image_list).tolist()
- 
+            feature_removed = removeFeature(feature_temp, prelabeled_image_list).tolist()
+            print(len(feature_removed))
+
             selectedAttribute = data['attribute'][0]
 
-            collection_log.insert({"Time":time,"user_id": user_id, "What":"explore", "To":selectedAttribute})
-            
-            if data['label'][0] == "positive":
+            collection_log.insert({"Time":time,"user_id": user_id, "What":"explore", "To":selectedAttribute, "sampling":CONST_SAMPLING_MODE})
 
-                appendImage(blue_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
-                appendImage(red_list, possible_temp, attribute_temp, get_not_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
-                
-                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
-                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
-                else:
-                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
-            
-            else:
-                
-                appendImage(blue_list, possible_temp, attribute_temp, get_not_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
-                appendImage(red_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
-                
-                if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
-                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
-                else:
-                    appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
-            
+            appendImage(neutral_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute, attribute_temp, feature_temp, 0,CONST_NEUTRAL_NUMBER, keyword_index))
 
+
+            #     appendImage(blue_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
+            #     appendImage(red_list, possible_temp, attribute_temp, get_not_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
+                
+            #     if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
+            #         appendImage(neutral_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_NEUTRAL_NUMBER))
+            #     else:
+            #         appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+            
+            # else:
+                
+            #     appendImage(blue_list, possible_temp, attribute_temp, get_not_attribute_images(selectedAttribute,attribute_temp,0,CONST_BLUE_NUMBER))
+            #     appendImage(red_list, possible_temp, attribute_temp, get_attribute_images(selectedAttribute,attribute_temp,0,CONST_RED_NUMBER))
+                
+            #     if len(possible_temp) >= CONST_NEUTRAL_NUMBER:
+            #         appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),CONST_NEUTRAL_NUMBER))
+            #     else:
+            #         appendImage(neutral_list, possible_temp, attribute_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+            
 
         current_todo = blue_list + neutral_list + red_list
 
@@ -615,7 +669,7 @@ def getData():
         else:
             isFitted = True
             classifier.fit(X, y)
-            
+
         before_time = collection_user.find({'_id':user_id})[0]['time']
         add_time = int(data_list[0]['time'])
         final_time = before_time + add_time
@@ -626,16 +680,17 @@ def getData():
 
         for item in data_list:
             item['user_id'] = user_id
+            item['sampling'] = CONST_SAMPLING_MODE
 
-        collection_log.insert({"Time":time,"user_id": user_id, "What":"confirm"})
+        collection_log.insert({"Time":time,"user_id": user_id, "What":"confirm", "sampling":CONST_SAMPLING_MODE})
         
         if data_list:
             for item in data_list:
-                check = list(collection_labeled.find({"user_id": item["user_id"], "adjective": item["adjective"], "image_id": item['image_id']}))
+                check = list(collection_labeled.find({"user_id": item["user_id"], "adjective": item["adjective"], "image_id": item['image_id'], "sampling" : CONST_SAMPLING_MODE}))
                 if check:
-                    collection_labeled.update({"user_id": item["user_id"], "adjective": item["adjective"], "image_id": item['image_id']}, 
+                    collection_labeled.update({"user_id": item["user_id"], "adjective": item["adjective"], "image_id": item['image_id'], "sampling" : CONST_SAMPLING_MODE}, 
                                             {'$set': {"user_id": item["user_id"],"cluster": item["cluster"], "image_id": item['image_id']
-                                                        , "adjective": item["adjective"], "label":item["label"], "time":item['time']}})
+                                                        , "adjective": item["adjective"], "label":item["label"], "time":item['time'], "sampling" : CONST_SAMPLING_MODE}})
                     print("updated!")
                 else:
                     collection_labeled.insert(item)
