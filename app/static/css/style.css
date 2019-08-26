@@ -2,9 +2,9 @@ body{
   padding: 15px;
 }
 .red-blue{
-  width: 579px;
+  width: 864px;
   height: auto;
-  min-height: 114.7px;
+  min-height: 382px;
   border: inset;
   border-color: #707070;
   border-width: 1px;
@@ -70,7 +70,7 @@ div.block {
 
 .image_row{
   width: auto;
-  height: 146.7px;
+  height: 192px;
 }
 .description{
   width: 100%; 
@@ -95,7 +95,7 @@ div.block {
   border: solid; 
 }
 .neutral{
-  width : 864px;
+  width : 1150px;
   border: inset;
   border-color: #707070;
   border-width: 1px;

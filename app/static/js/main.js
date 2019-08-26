@@ -1018,7 +1018,7 @@ function init(data){
 
 var margin = { top: 0, right: 30, bottom: 0, left: 0},
 tsne_width = 350;
-tsne_height = 600;
+tsne_height = 670;
 var tsne_svg = d3.select("#tsne_div")
           .append("svg")
           .attr("width", 330 + "px")
