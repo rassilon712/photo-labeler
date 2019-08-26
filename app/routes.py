@@ -173,10 +173,12 @@ def get_attribute_images(attribute, attribute_temp, feature_temp, start, number,
             features.append(feature_temp[i])
             index.append(i)
     
-    
     if isFitted:
-        y_test = np.array(classifier.predict_proba(features)[:,1])    
-        sort_ret = np.argsort(y_test)[::-1][0:number]
+        if features:
+            y_test = np.array(classifier.predict_proba(features)[:,1])    
+            sort_ret = np.argsort(y_test)[::-1][0:number]
+        else:
+            sort_ret = []
     else:
         sort_ret = random.sample(range(len(attribute_temp)),number)
 
@@ -670,9 +672,14 @@ def getData():
             isFitted = True
             classifier.fit(X, y)
 
+
         before_time = collection_user.find({'_id':user_id})[0]['time']
-        add_time = int(data_list[0]['time'])
+        if data_list:
+            add_time = int(data_list[0]['time'])
+        else:
+            add_time = 0
         final_time = before_time + add_time
+
         print('final_time', final_time)
         if final_time > 900000:
             collection_user.update({'_id':user_id}, {'$set':{'isDone' : True}})
