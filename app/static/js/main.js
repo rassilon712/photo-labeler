@@ -4,8 +4,8 @@ const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 const BATCH_NUMBER = 12;
-// const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
-const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
+const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
+// const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
 // const SAMPLING_MODE = "RANDOM";
 
 /* Tool 기능 관련 변수들 */
@@ -555,7 +555,7 @@ function onMouseDown(e, item) {
       jObject.image_id = item.src.split(/[/]+/).pop();
       jObject.From = "positive";
       jObject.To = "negative";
-      
+      jObject.batch = count_num;
       jObject.Time = js_yyyy_mm_dd_hh_mm_ss ();
       jObject.adjective = keyword;
 
@@ -586,7 +586,7 @@ function onMouseDown(e, item) {
       jObject.image_id = item.src.split(/[/]+/).pop();
       jObject.From = "negative";
       jObject.To = "positive";
-
+      jObject.batch = count_num;
       jObject.Time = js_yyyy_mm_dd_hh_mm_ss ();
       jObject.adjective = keyword;
 
