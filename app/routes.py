@@ -25,8 +25,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# client = pymongo.MongoClient('mongodb://localhost:27017/')
-client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+client = pymongo.MongoClient('mongodb://localhost:27017/')
+# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -39,7 +39,8 @@ CONST_RANDOM_RED_NUMBER = 0
 CONST_RANDOM_NEUTRAL_NUMBER= 12
 
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
-CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
+# CONST_ADJECTIVE = ["ATTRACTIVE", "CONFIDENTIAL","GOODNESS", "padding"]
+CONST_ADJECTIVE = ["YOUNG", "OVAL-FACED","BIG-NOSED", "padding"]
 # CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
 CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2'
 CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
@@ -47,7 +48,7 @@ CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
 CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
-CONST_SAMPLING_MODE = "PREDICT"
+CONST_SAMPLING_MODE = "MIDDLE"
 
 #--------------------------------------------------------------------------------------------
 
@@ -387,8 +388,8 @@ for key in sorted(attr_list_temp.keys()):
         if len(attr_list.keys()) == 1000:
             break
 
-print(attr_list.keys())
-print(total_image_list)
+# print(attr_list.keys())
+# print(total_image_list)
 
 for each_key in sorted(attr_list):
     attr_list2.append(attr_list[each_key])
@@ -682,7 +683,7 @@ def getData():
         final_time = before_time + add_time
 
         print('final_time', final_time)
-        if final_time > 900000:
+        if final_time > 600000:
             collection_user.update({'_id':user_id}, {'$set':{'isDone' : True}})
         collection_user.update({'_id':user_id}, {'$set':{'time' : final_time}})
 
@@ -758,7 +759,7 @@ def getData():
                 appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
                 batch_list = neutral_list
 
-            elif CONST_SAMPLING_MODE == "PREDICT":
+            elif CONST_SAMPLING_MODE == "TOP":
                 blue_number = CONST_RANDOM_BLUE_NUMBER
                 red_number = CONST_RANDOM_RED_NUMBER
                 neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
@@ -775,6 +776,27 @@ def getData():
 
                 appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
                 batch_list = neutral_list
+
+
+            elif CONST_SAMPLING_MODE == "MIDDLE":
+                blue_number = CONST_RANDOM_BLUE_NUMBER
+                red_number = CONST_RANDOM_RED_NUMBER
+                neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
+                isNewset = True
+                keyword_index = keyword_index + 1
+                db_image_list = [item['image_id'] for item in collection_image.find()]
+                prelabeled_image_list = [item['image_id'] for item in collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]})]        
+                possible_images = sorted(list(set(db_image_list) - set(prelabeled_image_list)))
+                
+                possible_temp = copy.deepcopy(possible_images)
+                print(len(possible_temp))
+                feature_temp = copy.deepcopy(feature_list)
+                
+
+                appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_BATCH_NUMBER))
+                batch_list = neutral_list
+
+
 
         else:
             isNewset = False
@@ -821,7 +843,7 @@ def getData():
 
                 batch_list = neutral_list
 
-            elif CONST_SAMPLING_MODE == "PREDICT":
+            elif CONST_SAMPLING_MODE == "TOP":
                 
                 if isFitted:
                     y_test = np.array(classifier.predict_proba(feature_temp)[:,1])    
@@ -835,6 +857,22 @@ def getData():
                 neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
 
                 batch_list = neutral_list
+
+            elif CONST_SAMPLING_MODE == "MIDDLE":
+                
+                if isFitted:
+                    y_test = np.array(classifier.predict_proba(feature_temp)[:,1])    
+                    sort_ret = np.argsort(abs(y_test-0.5))[::1][0:CONST_BATCH_NUMBER]
+                else:
+                    sort_ret = random.sample(range(len(possible_temp)),CONST_RANDOM_NEUTRAL_NUMBER)
+
+                appendImage(neutral_list, possible_temp, feature_temp, sort_ret)
+                blue_number = CONST_RANDOM_BLUE_NUMBER
+                red_number = CONST_RANDOM_RED_NUMBER
+                neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
+
+                batch_list = neutral_list
+
 
             elif CONST_SAMPLING_MODE == "CLUSTER":
                 
@@ -957,7 +995,10 @@ def index():
             if CONST_SAMPLING_MODE == "RANDOM":
                 batch_list = [total_image_list[item] for item in random.sample(range(len(total_image_list)),CONST_BATCH_NUMBER)]
             
-            elif CONST_SAMPLING_MODE == "PREDICT":
+            elif CONST_SAMPLING_MODE == "TOP":
+                batch_list = [total_image_list[item] for item in random.sample(range(len(total_image_list)),CONST_BATCH_NUMBER)]
+
+            elif CONST_SAMPLING_MODE == "MIDDLE":
                 batch_list = [total_image_list[item] for item in random.sample(range(len(total_image_list)),CONST_BATCH_NUMBER)]
 
             elif CONST_SAMPLING_MODE == "CLUSTER":

@@ -6,14 +6,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# client_remote = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
-client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+# client = pymongo.MongoClient('mongodb://localhost:27017/')
 
 # ------------------------------------------- parameter settings -----------------------------
 db = client.davian
 collection_labeled = db.labeled
 collection_log = db.log
-user_list = [5,6]
+user_list = [6]
 total_data_time_per_batch = {}
 total_data_time_per_batch_df = pd.DataFrame()
 total_data_count_number = {}
