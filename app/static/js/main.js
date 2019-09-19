@@ -1,11 +1,11 @@
-const NUMBER_OF_ADJECTIVE = 3;
+const NUMBER_OF_ADJECTIVE = 1;
 const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 const BATCH_NUMBER = 12;
-// const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
-const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/labeling_images/FFHQ_SAMPLE2/'
-// const SAMPLING_MODE = "RANDOM";
+const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
+// const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/FFHQ_SAMPLE2/'
+const SAMPLING_MODE = "RANDOM";
 
 /* Tool 기능 관련 변수들 */
 
@@ -742,8 +742,8 @@ function confirm_click(){
 
 //logout 누름
 function logout_click(){
-  window.location = "http://130.211.240.166:5000/logout";
-  // window.location.href = "http://127.0.0.1:5000/logout";
+  // window.location = "http://130.211.240.166:5000/logout";
+  window.location.href = "http://127.0.0.1:5000/logout";
 }  
 
 function classifyImages(){
@@ -787,17 +787,12 @@ function classifyImages(){
     success: function(data) {      
       //NUMBER_OF_ADJECTIVE만큼 실험을 안 했다면 화면 초기화(init)
       //NUMBER_OF_ADJECTIVE만큼 실험을 했다면 로그아웃 (이 때, user db의 isDone 필드가 True로 바뀌며 재접속 불가능)
-      if(data['time'] > 600000){
-        // window.location = "http://127.0.0.1:5000/logIn";
-        window.location = "http://130.211.240.166:5000/logIn";
-
-      }
       if(data['index'] < NUMBER_OF_ADJECTIVE){
         init(data);
       }
       else{
-        // window.location = "http://127.0.0.1:5000/logIn";
-        window.location = "http://130.211.240.166:5000/logIn";
+        window.location = "http://127.0.0.1:5000/logIn";
+        // window.location = "http://130.211.240.166:5000/logIn";
       }
     },
     error: function(x, e) {
@@ -1361,40 +1356,40 @@ if(blueOrred == "blue"){
                     .attr("x",nodePos)
                     .attr("y",function(d, i){ return 60 + i*40})
                     .attr("width", rect_width-5)
-                    .attr("height", 30)
-                    .on("mouseover", function(d){
-                      d3.select(this).style("cursor","pointer");
+                    .attr("height", 30);
+                    // .on("mouseover", function(d){
+                    //   d3.select(this).style("cursor","pointer");
                       
-                      tempStroke = d3.select(this).style("stroke");
-                      d3.select(this).style("stroke","green");
-                    })
-                    .on("mouseout", function(d) {      
-                      d3.select(this).style("stroke",tempStroke);
-                    })
-                    .on("click", function(d) {
-                      let jObject = new Object(); 
-                      jObject.attribute = d.attribute;
-                      if( blueOrred == "blue"){
-                        jObject.label = "positive";
-                      }
-                      else{
-                        jObject.label = "negative";
-                      }
-                      jObject.type = "attribute";
-                      console.log(d.attribute);
-                      $.ajax({
-                        url : "/getCurrent",
-                        type: 'POST',
-                        data: jObject,
-                        dataType:'json',
-                        success: function(data) {
-                          init(data);
-                        },
-                        error: function(x, e) {
-                            alert("error");
-                        }
-                    });
-                    });
+                    //   tempStroke = d3.select(this).style("stroke");
+                    //   d3.select(this).style("stroke","green");
+                    // })
+                    // .on("mouseout", function(d) {      
+                    //   d3.select(this).style("stroke",tempStroke);
+                    // })
+                    // .on("click", function(d) {
+                    //   let jObject = new Object(); 
+                    //   jObject.attribute = d.attribute;
+                    //   if( blueOrred == "blue"){
+                    //     jObject.label = "positive";
+                    //   }
+                    //   else{
+                    //     jObject.label = "negative";
+                    //   }
+                    //   jObject.type = "attribute";
+                    //   console.log(d.attribute);
+                    //   $.ajax({
+                    //     url : "/getCurrent",
+                    //     type: 'POST',
+                    //     data: jObject,
+                    //     dataType:'json',
+                    //     success: function(data) {
+                    //       init(data);
+                    //     },
+                    //     error: function(x, e) {
+                    //         alert("error");
+                    //     }
+                    // });
+                    // });
 
   rect_nodes
         .attr("id",function(d){ return d.attribute})
