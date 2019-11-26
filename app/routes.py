@@ -25,8 +25,8 @@ import numpy as np
 
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-client = pymongo.MongoClient('mongodb://localhost:27017/')
-# client = pymongo.MongoClient("mongodb+srv://admin:davian@daviandb-9rvqg.gcp.mongodb.net/test?retryWrites=true&w=majority")
+client = pymongo.MongoClient('mongodb://localhost:27017/') #for local
+#client = pymongo.MongoClient("mongodb+srv://Dongjun:dongjun@labeling-kh64n.gcp.mongodb.net/test?retryWrites=true&w=majority")
 
 
 db = client.davian
@@ -41,10 +41,11 @@ CONST_RANDOM_NEUTRAL_NUMBER= 12
 CONST_BATCH_NUMBER = CONST_BLUE_NUMBER + CONST_NEUTRAL_NUMBER + CONST_RED_NUMBER
 CONST_ADJECTIVE = ["EXTROVERTED", "CONFIDENTIAL","GOODNESS", "padding"]
 # CONST_ADJECTIVE = ["YOUNG", "OVAL-FACED","BIG-NOSED", "padding"]
-CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/'
+CONST_IMAGE_PATH = 'static/image/labeledEx/'
 # CONST_IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/FFHQ_SAMPLE2/'
 CONST_PRETRAINED_FEATURE1 = "ffhq600_facenet_vggface1.pkl"
 CONST_PRETRAINED_FEATURE2 = "ffhq600_facenet_vggface2.pkl"
+#CONST_PRETRAINED_FEATURE3 = "attribute2_3.pkl"
 CONST_CLUSTER_NUMBER = 200
 CONST_CLUSTER_AFFINITY = "euclidean"
 CONST_CLUSTER_LINKAGE = "ward"
@@ -336,29 +337,29 @@ db = client.davian
 collection_labeled = db.labeled
 collist = db.list_collection_names()
 
-if "user" not in collist:
+if "user" not in collist: #sampling count는 몇개나했는지 세는용도.
     collection_user = db.user
-    collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 0}, 
+    collection_user.insert([{'_id':'asdf','pwd':'asdf','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0}, 
     {'_id':'labeler_1','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
-    {'_id':'labeler_2','pwd':'davian','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 1},
-    {'_id':'labeler_3','pwd':'davian','isDone':False, 'time': 0, 'sampling': 2, 'sampling_count': 0, 'latin': 2},
+    {'_id':'labeler_2','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
+    {'_id':'labeler_3','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
     {'_id':'labeler_4','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
-    {'_id':'labeler_5','pwd':'davian','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 1},
-    {'_id':'labeler_6','pwd':'davian','isDone':False, 'time': 0, 'sampling': 2, 'sampling_count': 0, 'latin': 2},
+    {'_id':'labeler_5','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
+    {'_id':'labeler_6','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
     {'_id':'labeler_7','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
-    {'_id':'labeler_8','pwd':'davian','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 1},
-    {'_id':'labeler_9','pwd':'davian','isDone':False, 'time': 0, 'sampling': 2, 'sampling_count': 0, 'latin': 2},
+    {'_id':'labeler_8','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
+    {'_id':'labeler_9','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
     {'_id':'labeler_10','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
-    {'_id':'labeler_11','pwd':'davian','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 1},
-    {'_id':'labeler_12','pwd':'davian','isDone':False, 'time': 0, 'sampling': 2, 'sampling_count': 0, 'latin': 2},
+    {'_id':'labeler_11','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
+    {'_id':'labeler_12','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
     {'_id':'labeler_13','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
-    {'_id':'labeler_14','pwd':'davian','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 1},
-    {'_id':'labeler_15','pwd':'davian','isDone':False, 'time': 0, 'sampling': 2, 'sampling_count': 0, 'latin': 2},
+    {'_id':'labeler_14','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
+    {'_id':'labeler_15','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
     {'_id':'labeler_16','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
-    {'_id':'labeler_17','pwd':'davian','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 1},
-    {'_id':'labeler_18','pwd':'davian','isDone':False, 'time': 0, 'sampling': 2, 'sampling_count': 0, 'latin': 2},
+    {'_id':'labeler_17','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
+    {'_id':'labeler_18','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
     {'_id':'labeler_19','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0},
-    {'_id':'labeler_20','pwd':'davian','isDone':False, 'time': 0, 'sampling': 1, 'sampling_count': 0, 'latin': 1}])
+    {'_id':'labeler_20','pwd':'davian','isDone':False, 'time': 0, 'sampling': 0, 'sampling_count': 0, 'latin': 0}])
 
 
 collection_user = db.user
@@ -374,40 +375,46 @@ total_image_list2 = sorted(os.listdir(os.path.join(APP_ROOT,CONST_IMAGE_PATH)))
 if "images" not in collist:
     collection_image = db.images
 
-    temp = random.sample(range(len(total_image_list2)),750)
+    temp = random.sample(range(len(total_image_list2)),750) ##2250
     collection_image.insert([{"image_id" : total_image_list2[i], "key_index" : 0} for i in temp])
     
-    for i in sorted(temp, reverse = True):
-        del total_image_list2[i]
-    print(len(total_image_list2))
-
-    temp = random.sample(range(len(total_image_list2)),750)
-    collection_image.insert([{"image_id" : total_image_list2[i], "key_index" : 1} for i in temp])
+    #for i in sorted(temp, reverse = True):
+    #    del total_image_list2[i]
+    print('total_image_list2:',len(total_image_list2))
     
-    for i in sorted(temp, reverse = True):
-        del total_image_list2[i]
-    print(len(total_image_list2))
 
-    temp = random.sample(range(len(total_image_list2)),750)
-    collection_image.insert([{"image_id" : total_image_list2[i], "key_index" : 2} for i in temp])
+    #temp = random.sample(range(len(total_image_list2)),750)
+    #collection_image.insert([{"image_id" : total_image_list2[i], "key_index" : 1} for i in temp])
     
-    for i in sorted(temp, reverse = True):
-        del total_image_list2[i]
-    print(len(total_image_list2))
+    #for i in sorted(temp, reverse = True):
+    #    del total_image_list2[i]
+    #print(len(total_image_list2))
 
-    temp = random.sample(range(len(total_image_list2)),750)
-    collection_image.insert([{"image_id" : total_image_list2[i], "key_index" : 3} for i in temp])
+    #temp = random.sample(range(len(total_image_list2)),750)
+    #collection_image.insert([{"image_id" : total_image_list2[i], "key_index" : 2} for i in temp])
+    
+    #for i in sorted(temp, reverse = True):
+    #    del total_image_list2[i]
+    #print(len(total_image_list2))
+
+    #temp = random.sample(range(len(total_image_list2)),750)
+    #collection_image.insert([{"image_id" : total_image_list2[i], "key_index" : 3} for i in temp])
 
     print("check")
 
 collection_image = db.images
 
-total_num = 750
+total_num = 750 #2250 
+flag_for_cluster = 0
 
 features1 = read_pck(CONST_PRETRAINED_FEATURE1)[0]
 features2 = read_pck(CONST_PRETRAINED_FEATURE2)[0]
+#features1 = read_pck(CONST_PRETRAINED_FEATURE3)[0] #attractive feature
 
 features1.update(features2)
+
+#with open('./attribute2_3.pkl', 'rb') as f:     //for feature3 (attractive 만했던 이미지들 vgg face features)
+#    total_dict = pickle.load(f)
 
 with open('./ffhq600_facenet_vggface1.pkl', 'rb') as f:
     total_dict = pickle.load(f)
@@ -428,14 +435,14 @@ for key in sorted(attr_list_temp.keys()):
         attr_list[key] = attr_list_temp[key]
 print(len(attr_list.keys()))
 
-for j in range(0,3):
+for j in range(0,1): #0,3 
     feature_list = []
     key_list = []
     attr_list2 = []
 
     total_image_list = sorted([item['image_id'] for item in list(collection_image.find({"key_index":j}))])
     total_num = len(total_image_list)
-    print(total_num)
+    print('total_num: ',total_num)
     features3 = {}
     for key in sorted(features1.keys()):
         if not key in features3 and key in total_image_list:    # Depending on the goal, this line may not be neccessary
@@ -443,7 +450,7 @@ for j in range(0,3):
     print(len(features3.keys()))
 
     for each_key in sorted(features3):
-        feature_list.append(features3[each_key])
+        feature_list.append(features3[each_key]) #feature_list(feature vector sorted in key index)
         key_list.append(each_key)
     feature_np = np.array(feature_list)
 
@@ -795,7 +802,7 @@ def getData():
                 isNewset = True
                 keyword_index = keyword_index + 1
                 
-                db_image_list = [item['image_id'] for item in collection_image.find({"key_index" : (2 + latin)%3})]
+                db_image_list = [item['image_id'] for item in collection_image.find({"key_index" : (0 + latin)%3})] #2 + latin
                 print(len(db_image_list))
             
                 prelabeled_image_list = [item['image_id'] for item in collection_labeled.find({"user_id" : user_id, "adjective" : CONST_ADJECTIVE[keyword_index]})]        
@@ -843,8 +850,9 @@ def getData():
             print("feature_removed", len(feature_temp))
 
             # 여기서 모델로 사진 결정
+            global flag_for_cluster
 
-            if sampling_number == 0:
+            if sampling_number == 2:
                 print('RANDOM')
                 if len(possible_temp) >= CONST_RANDOM_NEUTRAL_NUMBER:
                     appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_RANDOM_NEUTRAL_NUMBER))
@@ -856,12 +864,87 @@ def getData():
 
                 batch_list = neutral_list
 
-            elif sampling_number == 2:
+            elif sampling_number == 0: ##sampling_number 0, latin 0 일때 현재 오류가 안남.
+                print('CLUSTER')
+                if isFitted:
+                    if flag_for_cluster == 0:
+                        y_test = np.array(classifier.predict_proba(feature_temp)[:,0])
+                        max_ret = np.argsort(y_test)[::-1][0:3]
+                        #print('feature:', feature_temp[max_ret[0]], len(feature_temp[max_ret[0]])) #512
+                        print("flag:",flag_for_cluster)
+                        print('max_ret:', max_ret)
+
+                        global max_selected_image1
+
+                        max_selected_image1 = possible_temp[max_ret[0]]
+                        
+                        print('Max selected image :', max_selected_image1)
+                        
+                        
+                        similar_images = get_similar_images(max_selected_image1, np.array(feature_temp),0,CONST_NEUTRAL_NUMBER, "name")
+                        similar_images1 = similar_images
+                        
+                        
+                        #similar_images2 = get_similar_images(max_selected_image2, np.array(feature_temp),0,CONST_NEUTRAL_NUMBER, "name")
+                        #similar_images3 = get_similar_images(max_selected_image3, np.array(feature_temp),0,CONST_NEUTRAL_NUMBER, "name")
+                        #print("Similar images : ", similar_images1, similar_images2,similar_images3)
+                        flag_for_cluster = 1
+                        print("changed_flag:",flag_for_cluster)
+                        print('possible_temp :',len(possible_temp))
+                        print('feature_temp:', len(feature_temp))
+                        appendImage(neutral_list, possible_temp, feature_temp, similar_images1)
+                        
+                        
+                        
+                    elif flag_for_cluster == 1:
+                        similar_images = get_similar_images(max_selected_image1, np.array(feature_temp),0,CONST_NEUTRAL_NUMBER, "name")
+                        similar_images2 = similar_images
+                        print(similar_images2)
+                        print("flag:", flag_for_cluster)
+                        print('possible_temp :',len(possible_temp))
+                        print('feature_temp:', len(feature_temp))
+                        flag_for_cluster = 2
+                        appendImage(neutral_list, possible_temp, feature_temp, similar_images2)
+                        
+
+                    elif flag_for_cluster == 2:
+                        similar_images = get_similar_images(max_selected_image1, np.array(feature_temp),0,CONST_NEUTRAL_NUMBER, "name")
+                        similar_images3 = similar_images
+                        print("flag:", flag_for_cluster)
+                        print('possible_temp :',len(possible_temp))
+                        print('feature_temp:', len(feature_temp))
+                        flag_for_cluster = 0
+                        appendImage(neutral_list, possible_temp, feature_temp, similar_images3)
+                        
+                else:
+                    if len(possible_temp) >= CONST_RANDOM_NEUTRAL_NUMBER:
+                        appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_RANDOM_NEUTRAL_NUMBER))
+                    else:
+                        appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),len(possible_temp)))
+
+                blue_number = CONST_RANDOM_BLUE_NUMBER
+                red_number = CONST_RANDOM_RED_NUMBER
+                neutral_number = CONST_RANDOM_NEUTRAL_NUMBER
+
+                batch_list = neutral_list
+
+            elif sampling_number == 3:
                 print('TOP')
                 if isFitted:
                     y_test = np.array(classifier.predict_proba(feature_temp)[:,0])    
-                    sort_ret = np.argsort(y_test)[::-1][0:CONST_BATCH_NUMBER]            
-                    appendImage(neutral_list, possible_temp, feature_temp, sort_ret)
+                    max_ret = np.argsort(y_test)[::-1][0:1][0]
+                    print(max_ret)
+                    max_selected_image = possible_temp[max_ret]
+                    print(max_selected_image)
+                    
+                    #print(prelabeled_image_list) #labeled 된 이미지 id이름들
+                    
+                    #sort_ret = np.argsort(y_test)[::-1][0:CONST_BATCH_NUMBER]
+                    print(len(feature_temp))
+                    #print(sort_ret)            
+                    #appendImage(neutral_list, possible_temp, feature_temp, sort_ret)
+                    appendImage(neutral_list, possible_temp, feature_temp, get_similar_images(max_selected_image,np.array(feature_temp),0,CONST_NEUTRAL_NUMBER, "name"))
+
                 else:
                     if len(possible_temp) >= CONST_RANDOM_NEUTRAL_NUMBER:
                         appendImage(neutral_list, possible_temp, feature_temp, random.sample(range(len(possible_temp)),CONST_RANDOM_NEUTRAL_NUMBER))
@@ -894,13 +977,13 @@ def getData():
 
                 batch_list = neutral_list
 
-        current_todo = batch_list
+        current_todo = batch_list #해야하는 것들 
             
 
         labeled = [total_image_temp.index(item['image_id']) for item in data_list]
         current_cluster_index = [total_image_temp.index(item) for item in current_todo]
         current_cluster = extractCluster(current_cluster_index, cluster_temp, "image_id")
-        print(current_cluster)
+        print('current_cluster:', current_cluster)
         labeled_cluster = extractCluster(labeled, cluster_temp, 'image_id')
         label = np.array([d['label'] for d in data_list])
 
@@ -957,9 +1040,9 @@ def index():
         sampling_number = user['sampling']
         latin = user['latin']
 
-        db_image_list = [item['image_id'] for item in collection_image.find({'key_index':(sampling_number + latin)%3})]
+        db_image_list = [item['image_id'] for item in collection_image.find({'key_index':(0 + latin)%3})] #key_index : sampling + latin
         print(len(db_image_list))
-        todo_images = [item for item in collection_current.find({"user_id" : user_id, 'sampling':sampling_number})]
+        todo_images = [item for item in collection_current.find({"user_id" : user_id, 'sampling':sampling_number})] #해야되는 이미지들 
         keyword_index = 0
         if todo_images:
             keyword_index = todo_images[-1]["adjective"]
@@ -987,10 +1070,10 @@ def index():
             collection_current.delete_many({'user_id':user_id})
             collection_current.insert([{'user_id' : user_id, "adjective" : 0, 'index' : i, 'image_id' : dictOfImg[i], "sampling" : sampling_number} for i in range(0,CONST_BATCH_NUMBER)])
 
-        cluster_temp = list(collection_cluster.find({'sampling':(sampling_number + latin)%3},{'_id':0}))
+        cluster_temp = list(collection_cluster.find({'sampling':(0 + latin)%3},{'_id':0})) #sampling_number
         print("cluster_temp", len(cluster_temp), cluster_temp[0])
 
-        total_image_temp = sorted([item['image_id'] for item in list(collection_image.find({'key_index':(sampling_number+latin)%3}))])
+        total_image_temp = sorted([item['image_id'] for item in list(collection_image.find({'key_index':(0+latin)%3}))]) #0 -> sampling number
         current_cluster_index = []
         for item in dictOfImg.keys():
             if dictOfImg[item] != None:

@@ -3,7 +3,8 @@ const BLUE_IMAGE_NUMBER = 6;
 const RED_IMAGE_NUMBER = 6;
 const NEUTRAL_IMAGE_NUMBER = 2;
 const BATCH_NUMBER = 12;
-const IMAGE_PATH ='static/image/FFHQ_SAMPLE2/'
+const IMAGE_PATH ='static/image/labeledEx/'
+//const IMAGE_PATH = 'static/image/21000_25000selected/'
 // const IMAGE_PATH = 'static/image/FFHQ_SAMPLE2/FFHQ_SAMPLE2/'
 const SAMPLING_MODE = "RANDOM";
 
@@ -513,7 +514,7 @@ function onMouseOver  (e, item) {
     
     attrParam = JSON.stringify(jObject);
 
-    $.ajax({
+    /*$.ajax({
       url : "/getAttribute",
       type: 'POST',
       data: {"jsonData" : attrParam},
@@ -529,11 +530,11 @@ function onMouseOver  (e, item) {
           $('#'.concat(data['attribute'][i])).attr('class', 'node'.concat(" attr_on"));
           // $('#'.concat(data['attribute'][i])).css('fill', 'red');
         }
-      },
+      }, 
       error: function(x, e) {
           alert("error");
       }
-  }); 
+  }); */ 
 }
 }
 
